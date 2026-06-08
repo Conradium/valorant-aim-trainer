@@ -48,6 +48,103 @@ const MODES = {
 };
 const MODE_ORDER = ['micro', 'wide', 'reflex', 'grid', 'head'];
 
+// --- i18n: UI strings in English & Indonesian ---
+const TEXT = {
+  en: {
+    subtitle: 'Aim Trainer',
+    mode: 'Mode',
+    timeRemaining: 'Time Remaining',
+    score: 'Score',
+    accuracy: 'Accuracy',
+    hits: 'Hits',
+    misses: 'Misses',
+    avgSplit: 'Avg Split',
+    bestScore: 'Best Score',
+    running: 'Running…',
+    reset: 'Reset',
+    settings: 'Settings',
+    sensitivity: 'Valorant Sensitivity',
+    targetSize: 'Target Size',
+    crosshair: 'Crosshair',
+    color: 'Color',
+    size: 'Size',
+    tip: 'Click the arena to lock your mouse · Esc to release · Left-click to fire',
+    secondsOnClock: '60 seconds on the clock.',
+    startBtn: '▶ Start Practice',
+    resume: 'Click to resume aiming',
+    sessionComplete: 'Session Complete',
+    newRecord: '★ New Record',
+    best: 'Best',
+    playAgain: '↻ Play Again',
+    sayHello: 'Say hello 👋',
+    supportMsg:
+      'Enjoying the trainer? Support keeps it free & updated — or just drop a message. Thank you! 🙌',
+    donate: '☕ Buy me a coffee / Donate',
+    helloBtn: '💌 Say hello',
+    github: '🐙 GitHub',
+    fsEnter: 'Enter fullscreen',
+    fsExit: 'Exit fullscreen',
+    mobileMsg1:
+      'This trainer needs a mouse and the Pointer Lock API, which aren’t available on phones or tablets.',
+    mobileMsg2: 'Please open it on a PC or laptop 💻',
+  },
+  id: {
+    subtitle: 'Latihan Aim',
+    mode: 'Mode',
+    timeRemaining: 'Sisa Waktu',
+    score: 'Skor',
+    accuracy: 'Akurasi',
+    hits: 'Kena',
+    misses: 'Meleset',
+    avgSplit: 'Rata Jeda',
+    bestScore: 'Skor Terbaik',
+    running: 'Berjalan…',
+    reset: 'Reset',
+    settings: 'Pengaturan',
+    sensitivity: 'Sensitivitas Valorant',
+    targetSize: 'Ukuran Target',
+    crosshair: 'Crosshair',
+    color: 'Warna',
+    size: 'Ukuran',
+    tip: 'Klik arena untuk mengunci mouse · Esc untuk lepas · Klik kiri untuk menembak',
+    secondsOnClock: 'Waktu 60 detik.',
+    startBtn: '▶ Mulai Latihan',
+    resume: 'Klik untuk lanjut membidik',
+    sessionComplete: 'Sesi Selesai',
+    newRecord: '★ Rekor Baru',
+    best: 'Terbaik',
+    playAgain: '↻ Main Lagi',
+    sayHello: 'Sapa aku 👋',
+    supportMsg:
+      'Suka dengan trainer ini? Dukungan membuatnya tetap gratis & terus diperbarui — atau sekadar kirim pesan. Terima kasih! 🙌',
+    donate: '☕ Traktir kopi / Donasi',
+    helloBtn: '💌 Sapa aku',
+    github: '🐙 GitHub',
+    fsEnter: 'Layar penuh',
+    fsExit: 'Keluar layar penuh',
+    mobileMsg1:
+      'Trainer ini butuh mouse dan Pointer Lock API, yang tidak tersedia di HP atau tablet.',
+    mobileMsg2: 'Silakan buka di PC atau laptop 💻',
+  },
+};
+
+const MODE_TEXT = {
+  en: {
+    micro: { name: 'Micro Flicks', desc: 'Tight cluster at head height. Train tiny, precise corrections.' },
+    wide: { name: 'Wide Flicks', desc: 'One far-flung target at a time — big, fast angle snaps.' },
+    reflex: { name: 'Reflex Pop', desc: 'A single target pops at a random moment — destroy it ASAP.' },
+    grid: { name: 'Target Switch', desc: 'Many targets spread wide. Clear fast, switch smoothly (gridshot).' },
+    head: { name: 'Headshot Precision', desc: 'Small targets on the head line. Pure accuracy & placement.' },
+  },
+  id: {
+    micro: { name: 'Micro Flicks', desc: 'Kelompok rapat setinggi kepala. Latih koreksi kecil yang presisi.' },
+    wide: { name: 'Wide Flicks', desc: 'Satu target jauh tiap kali — sentakan sudut besar & cepat.' },
+    reflex: { name: 'Reflex Pop', desc: 'Satu target muncul di saat acak — hancurkan secepatnya.' },
+    grid: { name: 'Target Switch', desc: 'Banyak target tersebar luas. Bersihkan cepat, pindah mulus (gridshot).' },
+    head: { name: 'Headshot Precision', desc: 'Target kecil di garis kepala. Murni akurasi & penempatan.' },
+  },
+};
+
 /*
  * Valorant sensitivity matcher.
  * Valorant's yaw is a fixed 0.07° of rotation per mouse count, per 1.0 sens.
@@ -73,6 +170,7 @@ export default function AimTrainer() {
     crosshairSize: 10,
     targetSize: 0.28,
     modeKey: 'micro',
+    lang: 'en',
   };
   const savedSettings = (() => {
     try {
@@ -91,6 +189,9 @@ export default function AimTrainer() {
   );
   const mode = MODES[modeKey] || MODES.micro;
   const [modeOpen, setModeOpen] = useState(false);
+  const [lang, setLang] = useState(TEXT[savedSettings.lang] ? savedSettings.lang : 'en');
+  const t = TEXT[lang] || TEXT.en;
+  const modeText = (MODE_TEXT[lang] || MODE_TEXT.en)[modeKey] || MODE_TEXT.en.micro;
 
   const cfgRef = useRef({ sensitivity, targetSize, mode });
   useEffect(() => {
@@ -102,12 +203,12 @@ export default function AimTrainer() {
     try {
       localStorage.setItem(
         'vat_settings',
-        JSON.stringify({ sensitivity, crosshairColor, crosshairSize, targetSize, modeKey })
+        JSON.stringify({ sensitivity, crosshairColor, crosshairSize, targetSize, modeKey, lang })
       );
     } catch {
       /* private mode / quota — settings just won't persist */
     }
-  }, [sensitivity, crosshairColor, crosshairSize, targetSize, modeKey]);
+  }, [sensitivity, crosshairColor, crosshairSize, targetSize, modeKey, lang]);
 
   // --- Session stats (UI state) ---
   const [isRunning, setIsRunning] = useState(false);
@@ -731,13 +832,8 @@ export default function AimTrainer() {
         <h1 className="text-2xl font-black tracking-widest text-val-red">
           VALORANT AIM TRAINER
         </h1>
-        <p className="max-w-sm text-sm leading-relaxed text-slate-300">
-          This trainer needs a <span className="font-bold text-white">mouse</span> and
-          the Pointer Lock API, which aren&apos;t available on phones or tablets.
-        </p>
-        <p className="max-w-sm text-sm font-bold text-val-accent">
-          Please open it on a PC or laptop 💻
-        </p>
+        <p className="max-w-sm text-sm leading-relaxed text-slate-300">{t.mobileMsg1}</p>
+        <p className="max-w-sm text-sm font-bold text-val-accent">{t.mobileMsg2}</p>
       </div>
     );
   }
@@ -755,7 +851,7 @@ export default function AimTrainer() {
             VALORANT
           </h1>
           <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
-            Aim Trainer
+            {t.subtitle}
           </p>
         </header>
 
@@ -768,9 +864,9 @@ export default function AimTrainer() {
           >
             <span>
               <span className="block text-[10px] uppercase tracking-widest text-slate-400">
-                Mode
+                {t.mode}
               </span>
-              <span className="text-sm font-bold text-val-red">⌖ {mode.name}</span>
+              <span className="text-sm font-bold text-val-red">⌖ {modeText.name}</span>
             </span>
             <span className="text-xs text-slate-400">{modeOpen ? '▲' : '▼'}</span>
           </button>
@@ -789,9 +885,11 @@ export default function AimTrainer() {
                       : 'border-transparent'
                   }`}
                 >
-                  <span className="text-sm font-bold text-white">{MODES[key].name}</span>
+                  <span className="text-sm font-bold text-white">
+                    {(MODE_TEXT[lang] || MODE_TEXT.en)[key].name}
+                  </span>
                   <span className="mt-0.5 block text-[10px] leading-snug text-slate-400">
-                    {MODES[key].desc}
+                    {(MODE_TEXT[lang] || MODE_TEXT.en)[key].desc}
                   </span>
                 </button>
               ))}
@@ -802,7 +900,7 @@ export default function AimTrainer() {
         {/* Timer */}
         <div className="rounded-md bg-black/30 p-3 text-center">
           <p className="text-[10px] uppercase tracking-widest text-slate-400">
-            Time Remaining
+            {t.timeRemaining}
           </p>
           <p
             className={`text-4xl font-black tabular-nums ${
@@ -815,16 +913,16 @@ export default function AimTrainer() {
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-2">
-          <Stat label="Score" value={score} accent />
-          <Stat label="Accuracy" value={`${accuracy.toFixed(1)}%`} />
-          <Stat label="Hits" value={hits} good />
-          <Stat label="Misses" value={misses} bad />
+          <Stat label={t.score} value={score} accent />
+          <Stat label={t.accuracy} value={`${accuracy.toFixed(1)}%`} />
+          <Stat label={t.hits} value={hits} good />
+          <Stat label={t.misses} value={misses} bad />
           <Stat
-            label="Avg Split"
+            label={t.avgSplit}
             value={`${avgRt ? Math.round(avgRt) : 0} ms`}
             wide
           />
-          <Stat label="Best Score" value={best.score} accent wide />
+          <Stat label={t.bestScore} value={best.score} accent wide />
         </div>
 
         {/* Controls */}
@@ -834,24 +932,24 @@ export default function AimTrainer() {
             disabled={isRunning}
             className="flex-1 rounded-md bg-val-red px-3 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isRunning ? 'Running…' : 'Start Practice'}
+            {isRunning ? t.running : t.startBtn.replace('▶ ', '')}
           </button>
           <button
             onClick={reset}
             className="rounded-md border border-white/15 px-3 py-2.5 text-sm font-bold uppercase tracking-wider text-slate-300 transition hover:bg-white/10"
           >
-            Reset
+            {t.reset}
           </button>
         </div>
 
         {/* Settings panel */}
         <div className="mt-1 space-y-4 rounded-md bg-black/20 p-4">
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-400">
-            Settings
+            {t.settings}
           </p>
 
           <Slider
-            label="Valorant Sensitivity"
+            label={t.sensitivity}
             value={sensitivity}
             min={0.05}
             max={2}
@@ -861,7 +959,7 @@ export default function AimTrainer() {
           />
 
           <Slider
-            label="Target Size"
+            label={t.targetSize}
             value={targetSize}
             min={0.12}
             max={0.6}
@@ -873,10 +971,10 @@ export default function AimTrainer() {
           {/* Crosshair customizer */}
           <div className="space-y-2 border-t border-white/5 pt-3">
             <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-              Crosshair
+              {t.crosshair}
             </p>
             <div className="flex items-center justify-between text-xs">
-              <label className="text-slate-300">Color</label>
+              <label className="text-slate-300">{t.color}</label>
               <input
                 type="color"
                 value={crosshairColor}
@@ -885,7 +983,7 @@ export default function AimTrainer() {
               />
             </div>
             <Slider
-              label="Size"
+              label={t.size}
               value={crosshairSize}
               min={4}
               max={28}
@@ -897,7 +995,7 @@ export default function AimTrainer() {
         </div>
 
         <p className="mt-auto text-center text-[10px] leading-relaxed text-slate-500">
-          Click the arena to lock your mouse · Esc to release · Left-click to fire
+          {t.tip}
         </p>
       </aside>
       )}
@@ -925,8 +1023,15 @@ export default function AimTrainer() {
             {fps} FPS
           </div>
           <button
+            onClick={() => setLang((l) => (l === 'en' ? 'id' : 'en'))}
+            title="Language"
+            className="rounded bg-black/50 px-2.5 py-1 text-xs font-bold leading-none text-slate-200 backdrop-blur transition hover:bg-black/70"
+          >
+            {lang === 'en' ? '🇬🇧 EN' : '🇮🇩 ID'}
+          </button>
+          <button
             onClick={toggleFullscreen}
-            title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            title={isFullscreen ? t.fsExit : t.fsEnter}
             className="rounded bg-black/50 px-2.5 py-1 text-sm leading-none text-slate-200 backdrop-blur transition hover:bg-black/70"
           >
             {isFullscreen ? '🗗' : '⛶'}
@@ -969,21 +1074,22 @@ export default function AimTrainer() {
                   avgRt={avgRt}
                   best={best}
                   newHigh={newHigh}
+                  t={t}
                   onAgain={startPractice}
                 />
               ) : (
                 <>
                   <h2 className="text-3xl font-black uppercase tracking-widest text-white">
-                    {mode.name}
+                    {modeText.name}
                   </h2>
                   <p className="mt-2 max-w-sm text-sm text-slate-300">
-                    {mode.desc} 60 seconds on the clock.
+                    {modeText.desc} {t.secondsOnClock}
                   </p>
                   <button
                     onClick={startPractice}
                     className="mt-5 rounded-md bg-val-red px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition hover:brightness-110"
                   >
-                    ▶ Start Practice
+                    {t.startBtn}
                   </button>
                 </>
               )}
@@ -995,7 +1101,7 @@ export default function AimTrainer() {
         {isRunning && !isLocked && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <p className="rounded bg-black/70 px-4 py-2 text-sm font-bold uppercase tracking-widest text-white">
-              Click to resume aiming
+              {t.resume}
             </p>
           </div>
         )}
@@ -1013,7 +1119,7 @@ export default function AimTrainer() {
       </main>
 
       {/* Floating "say hello" / donation bubble (hidden in fullscreen) */}
-      {!isFullscreen && <SupportBubble />}
+      {!isFullscreen && <SupportBubble t={t} />}
     </div>
   );
 }
@@ -1093,34 +1199,34 @@ function Crosshair({ color, size }) {
   );
 }
 
-function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, onAgain }) {
+function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t, onAgain }) {
   return (
     <div className="w-80 rounded-lg border border-white/10 bg-val-panel/95 p-6 shadow-2xl">
       <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
-        Session Complete
+        {t.sessionComplete}
       </p>
       {newHigh && (
         <p className="mt-1 animate-pulse text-xs font-black uppercase tracking-[0.3em] text-val-accent">
-          ★ New Record
+          {t.newRecord}
         </p>
       )}
       <p className="mt-1 text-5xl font-black text-val-accent tabular-nums">
         {score}
       </p>
       <p className="text-[11px] uppercase tracking-widest text-slate-400">
-        Best {best.score}
+        {t.best} {best.score}
       </p>
       <div className="mt-4 grid grid-cols-2 gap-3 text-left text-sm">
-        <SummaryRow label="Accuracy" value={`${accuracy.toFixed(1)}%`} />
-        <SummaryRow label="Avg Split" value={`${avgRt ? Math.round(avgRt) : 0} ms`} />
-        <SummaryRow label="Hits" value={hits} />
-        <SummaryRow label="Misses" value={misses} />
+        <SummaryRow label={t.accuracy} value={`${accuracy.toFixed(1)}%`} />
+        <SummaryRow label={t.avgSplit} value={`${avgRt ? Math.round(avgRt) : 0} ms`} />
+        <SummaryRow label={t.hits} value={hits} />
+        <SummaryRow label={t.misses} value={misses} />
       </div>
       <button
         onClick={onAgain}
         className="mt-6 w-full rounded-md bg-val-red px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition hover:brightness-110"
       >
-        ↻ Play Again
+        {t.playAgain}
       </button>
     </div>
   );
@@ -1165,18 +1271,15 @@ const CONTACT = {
   github: 'https://github.com/', // ← replace with your profile
 };
 
-function SupportBubble() {
+function SupportBubble({ t }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
       {/* Message card */}
       {open && (
         <div className="w-64 origin-bottom-right rounded-2xl border border-white/10 bg-val-panel/95 p-4 shadow-2xl backdrop-blur">
-          <p className="text-base font-black text-white">Say hello 👋</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-300">
-            Enjoying the trainer? Support keeps it free & updated — or just drop a
-            message. Thank you! 🙌
-          </p>
+          <p className="text-base font-black text-white">{t.sayHello}</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-300">{t.supportMsg}</p>
           <div className="mt-3 space-y-2">
             <a
               href={CONTACT.donate}
@@ -1184,13 +1287,13 @@ function SupportBubble() {
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-lg bg-val-red px-3 py-2 text-xs font-bold text-white transition hover:brightness-110"
             >
-              ☕ Buy me a coffee / Donate
+              {t.donate}
             </a>
             <a
               href={`mailto:${CONTACT.email}`}
               className="flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-slate-200 transition hover:bg-white/10"
             >
-              💌 Say hello
+              {t.helloBtn}
             </a>
             <a
               href={CONTACT.github}
@@ -1198,7 +1301,7 @@ function SupportBubble() {
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-slate-200 transition hover:bg-white/10"
             >
-              🐙 GitHub
+              {t.github}
             </a>
           </div>
         </div>
