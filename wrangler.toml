@@ -1,0 +1,11 @@
+name = "valorant-aim-trainer-backend"
+main = "worker.js"
+compatibility_date = "2024-06-08"
+
+# Bind a D1 Database.
+# Set database_id to your actual Cloudflare D1 database ID after running:
+#   npx wrangler d1 create valorant-aim-trainer-db
+[[d1_databases]]
+binding = "DB"
+database_name = "valorant-aim-trainer-db"
+database_id = "74acbd75-c434-456d-b00b-ada342384887"

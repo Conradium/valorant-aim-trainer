@@ -4,28 +4,10 @@ import { TEXT } from './translations.js';
 // Landing background (converted from PNG → WebP for a much smaller file).
 const BG_URL = '/img/jett-background.webp';
 
-function loadBest() {
-  try {
-    return JSON.parse(localStorage.getItem('vat_best')) || { score: 0, accuracy: 0, split: 0 };
-  } catch {
-    return { score: 0, accuracy: 0, split: 0 };
-  }
-}
-
-export default function Landing({ onPlay, lang, setLang, isMobile }) {
+export default function Landing({ onPlay, lang, setLang, isMobile, name, setName, best }) {
   const [panel, setPanel] = useState(null); // 'profile' | 'credits' | null
-  const best = loadBest();
-  const [name, setName] = useState(() => localStorage.getItem('vat_name') || 'Agent');
   const [showMobileModal, setShowMobileModal] = useState(false);
   const t = TEXT[lang] || TEXT.en;
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('vat_name', name);
-    } catch {
-      /* ignore */
-    }
-  }, [name]);
 
   return (
     <div

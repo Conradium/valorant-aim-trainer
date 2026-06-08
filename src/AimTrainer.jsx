@@ -59,7 +59,7 @@ const MODE_ORDER = ['micro', 'wide', 'reflex', 'grid', 'head'];
  */
 const VALORANT_YAW_CONSTANT = 0.07;
 
-export default function AimTrainer({ onExit, lang, setLang, isMobile }) {
+export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setBest }) {
   const mountRef = useRef(null);
   const rootRef = useRef(null);
   // All mutable engine/game data — lives outside React's render cycle so the
@@ -130,17 +130,6 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile }) {
   const [newHigh, setNewHigh] = useState(false);
   const splitRef = useRef({ sum: 0, count: 0, last: 0 });
   const popupSeq = useRef(0);
-
-  // (#5) Personal bests persisted client-side via localStorage.
-  const [best, setBest] = useState(() => {
-    try {
-      return (
-        JSON.parse(localStorage.getItem('vat_best')) || { score: 0, accuracy: 0, split: 0 }
-      );
-    } catch {
-      return { score: 0, accuracy: 0, split: 0 };
-    }
-  });
 
   const shots = hits + misses;
   const accuracy = shots > 0 ? (hits / shots) * 100 : 0;
@@ -641,20 +630,12 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile }) {
   useEffect(() => {
     if (!hasPlayed || timeLeft !== 0) return;
     setNewHigh(score > best.score);
-    setBest((prev) => {
-      const next = {
-        score: Math.max(prev.score, score),
-        accuracy: Math.max(prev.accuracy, accuracy),
-        // Best split = fastest (lowest) average; ignore sessions with <2 hits.
-        split: avgRt > 0 ? (prev.split ? Math.min(prev.split, avgRt) : avgRt) : prev.split,
-      };
-      try {
-        localStorage.setItem('vat_best', JSON.stringify(next));
-      } catch {
-        /* private mode / quota — best simply won't persist */
-      }
-      return next;
-    });
+    setBest((prev) => ({
+      score: Math.max(prev.score, score),
+      accuracy: Math.max(prev.accuracy, accuracy),
+      // Best split = fastest (lowest) average; ignore sessions with <2 hits.
+      split: avgRt > 0 ? (prev.split ? Math.min(prev.split, avgRt) : avgRt) : prev.split,
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, hasPlayed]);
 
