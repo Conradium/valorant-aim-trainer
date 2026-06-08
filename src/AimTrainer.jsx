@@ -389,25 +389,24 @@ export default function AimTrainer() {
     const tube = (rTop, rBot, len, mat, x, y, z, parent = weapon) =>
       part(new THREE.CylinderGeometry(rTop, rBot, len, 16), mat, x, y, z, Math.PI / 2, 0, 0, parent);
 
-    // ===== Sheriff-style heavy revolver — local -Z points down-range =====
-    // Frame / body (chunky)
-    part(new THREE.BoxGeometry(0.06, 0.13, 0.24), gunMat, 0, -0.01, 0.0);
-    // Barrel (medium) + top rib + under-lug
-    tube(0.027, 0.027, 0.34, darkMat, 0, 0.035, -0.24);
-    part(new THREE.BoxGeometry(0.03, 0.022, 0.34), gunMat, 0, 0.085, -0.22);
-    part(new THREE.BoxGeometry(0.05, 0.045, 0.32), darkMat, 0, -0.025, -0.22);
-    // Revolver cylinder (the rotating chamber) — prominent
-    tube(0.06, 0.06, 0.14, gunMat, 0, 0.0, -0.05);
-    // Front + rear sights
-    part(new THREE.BoxGeometry(0.012, 0.03, 0.02), darkMat, 0, 0.105, -0.4);
-    part(new THREE.BoxGeometry(0.03, 0.024, 0.02), darkMat, 0, 0.095, 0.08);
-    // Hammer at the rear
-    part(new THREE.BoxGeometry(0.02, 0.05, 0.03), darkMat, 0, 0.07, 0.13, -0.35);
+    // ===== Cowboy revolver (Colt Single Action Army) — local -Z down-range =====
+    // Frame
+    part(new THREE.BoxGeometry(0.052, 0.11, 0.16), gunMat, 0, 0.0, 0.03);
+    // Long round barrel + ejector-rod housing underneath
+    tube(0.026, 0.026, 0.52, gunMat, 0, 0.03, -0.34);
+    tube(0.016, 0.016, 0.42, darkMat, 0, -0.012, -0.32);
+    // Prominent cylinder (the rotating chamber)
+    tube(0.055, 0.055, 0.13, gunMat, 0, 0.0, -0.05);
+    // Front blade sight
+    part(new THREE.BoxGeometry(0.01, 0.025, 0.02), darkMat, 0, 0.07, -0.58);
+    // Exposed hammer at the rear
+    part(new THREE.BoxGeometry(0.02, 0.055, 0.03), darkMat, 0, 0.07, 0.12, -0.45);
     // Trigger guard + trigger
-    part(new THREE.BoxGeometry(0.046, 0.016, 0.06), gunMat, 0, -0.09, 0.06);
-    part(new THREE.BoxGeometry(0.01, 0.032, 0.014), darkMat, 0, -0.065, 0.06);
-    // Grip — raked back, chunky, wooden
-    part(new THREE.BoxGeometry(0.06, 0.2, 0.09), tanMat, 0, -0.18, 0.15, 0.55);
+    part(new THREE.BoxGeometry(0.04, 0.014, 0.05), gunMat, 0, -0.075, 0.07);
+    part(new THREE.BoxGeometry(0.009, 0.03, 0.013), darkMat, 0, -0.055, 0.07);
+    // Curved "plow handle" grip (two raked segments, ivory/wood)
+    part(new THREE.BoxGeometry(0.05, 0.12, 0.07), tanMat, 0, -0.11, 0.12, 0.45);
+    part(new THREE.BoxGeometry(0.048, 0.11, 0.075), tanMat, 0, -0.2, 0.19, 0.85);
 
     // --- Single (left) skin-tone hand wrapping the grip + bare forearm ---
     const buildHand = (gx, gy, gz, rot) => {
@@ -424,7 +423,7 @@ export default function AimTrainer() {
       part(new THREE.BoxGeometry(0.028, 0.07, 0.04), handMat, 0.055, 0.0, 0.03, 0.35, 0, -0.35, hand);
       return hand;
     };
-    buildHand(0.0, -0.17, 0.17, 0.5);
+    buildHand(0.0, -0.13, 0.14, 0.55);
 
     // Bare forearm (skin) running back to the bottom-right corner of the screen.
     const lForearm = part(new THREE.CylinderGeometry(0.06, 0.08, 0.45, 14), handMat, 0.03, -0.28, 0.36);
@@ -437,11 +436,11 @@ export default function AimTrainer() {
       new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.9 })
     );
     muzzle.rotation.x = -Math.PI / 2; // point down-range (-Z)
-    muzzle.position.set(0, 0.035, -0.43);
+    muzzle.position.set(0, 0.03, -0.62);
     muzzle.visible = false;
     weapon.add(muzzle);
     const muzzleLight = new THREE.PointLight(0xffcaa0, 0, 4);
-    muzzleLight.position.set(0, 0.035, -0.47);
+    muzzleLight.position.set(0, 0.03, -0.65);
     weapon.add(muzzleLight);
 
     // A soft fill light fixed to the camera so the viewmodel stays readable.
