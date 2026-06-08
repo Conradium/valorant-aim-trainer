@@ -30,17 +30,17 @@ const MODES = {
   wide: {
     name: 'Wide Flicks',
     desc: 'One far-flung target at a time — big, fast angle snaps.',
-    count: 1, spreadX: 5.5, spreadY: 2.2, centerY: 0.1, sizeScale: 1.15, reflex: false,
+    count: 1, spreadX: 5.5, spreadY: 1.4, centerY: 0.45, sizeScale: 1.15, reflex: false,
   },
   reflex: {
     name: 'Reflex Pop',
     desc: 'A single target pops at a random moment — destroy it ASAP.',
-    count: 1, spreadX: 4, spreadY: 2, centerY: 0.1, sizeScale: 1.2, reflex: true,
+    count: 1, spreadX: 4, spreadY: 1.3, centerY: 0.45, sizeScale: 1.2, reflex: true,
   },
   grid: {
     name: 'Target Switch',
     desc: 'Many targets spread wide. Clear fast, switch smoothly (gridshot).',
-    count: 6, spreadX: 4.8, spreadY: 2.2, centerY: 0.1, sizeScale: 0.9, reflex: false,
+    count: 6, spreadX: 4.8, spreadY: 1.5, centerY: 0.55, sizeScale: 0.9, reflex: false,
   },
   head: {
     name: 'Headshot Precision',
@@ -495,7 +495,9 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       const hits = raycaster.intersectObjects(targets, false);
       if (hits.length > 0) {
         const hitMesh = hits[0].object;
-        engine.current.onHit();
+        // True reaction = time from this target spawning to being hit.
+        const reaction = performance.now() - (hitMesh.userData.spawnTime || performance.now());
+        engine.current.onHit(reaction);
         // Destroy & respawn nearby.
         const idx = targets.indexOf(hitMesh);
         if (idx !== -1) targets.splice(idx, 1);
@@ -667,18 +669,27 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
   /* ------------- Bind engine callbacks to current React setters ------------- */
   useEffect(() => {
     if (!engine.current) return;
-    engine.current.onHit = () => {
+    engine.current.onHit = (reactionMs) => {
       hitSound();
       const now = performance.now();
       const s = splitRef.current;
       let pts = 100; // base reward
-      if (s.last) {
-        // (#2) Accurate speed metric: time between consecutive hits ("split").
+      if (cfgRef.current.mode.reflex) {
+        // (#2) Reflex Pop: the meaningful metric is pure reaction (spawn→hit),
+        // NOT the gap between hits (which would include the random spawn delay).
+        if (reactionMs != null) {
+          s.sum += reactionMs;
+          s.count += 1;
+          setAvgRt(s.sum / s.count);
+          pts += Math.round(Math.max(0, 600 - reactionMs) / 3);
+        }
+      } else if (s.last) {
+        // Other modes: time between consecutive hits ("split").
         const split = now - s.last;
         s.sum += split;
         s.count += 1;
         setAvgRt(s.sum / s.count);
-        // (#6) Bonus scales with how fast the split was (faster = more points).
+        // Bonus scales with how fast the split was (faster = more points).
         pts += Math.round(Math.max(0, 600 - split) / 3);
       }
       s.last = now;
@@ -946,7 +957,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
           <Stat label={t.hits} value={hits} good />
           <Stat label={t.misses} value={misses} bad />
           <Stat
-            label={t.avgSplit}
+            label={mode.reflex ? t.avgReaction : t.avgSplit}
             value={`${avgRt ? Math.round(avgRt) : 0} ms`}
             wide
           />
@@ -1096,6 +1107,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
                   best={best}
                   newHigh={newHigh}
                   t={t}
+                  splitLabel={mode.reflex ? t.avgReaction : t.avgSplit}
                   onAgain={startPractice}
                 />
               ) : (
@@ -1256,7 +1268,7 @@ function Crosshair({ color, size, moving }) {
   );
 }
 
-function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t, onAgain }) {
+function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t, splitLabel, onAgain }) {
   return (
     <div className="w-80 rounded-lg border border-white/10 bg-val-panel/95 p-6 shadow-2xl">
       <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
@@ -1275,7 +1287,7 @@ function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t
       </p>
       <div className="mt-4 grid grid-cols-2 gap-3 text-left text-sm">
         <SummaryRow label={t.accuracy} value={`${accuracy.toFixed(1)}%`} />
-        <SummaryRow label={t.avgSplit} value={`${avgRt ? Math.round(avgRt) : 0} ms`} />
+        <SummaryRow label={splitLabel || t.avgSplit} value={`${avgRt ? Math.round(avgRt) : 0} ms`} />
         <SummaryRow label={t.hits} value={hits} />
         <SummaryRow label={t.misses} value={misses} />
       </div>
