@@ -6,6 +6,15 @@ Put a revolver / cowboy-style 3D model here named **`revolver.glb`**:
 public/models/revolver.glb
 ```
 
+## Currently used model
+
+**“Colt Navy 1851”** by **iedalton** — licensed **CC Attribution (CC BY)**.
+- Stored here as `colt_navy_1851.glb` (~4.2 MB, 1k texture).
+- The app loads it via `MODEL_URL` in `src/AimTrainer.jsx` and auto-centres /
+  auto-scales it, so only `MODEL_TF.rot` / `pos` / `fitLength` need tuning.
+- **Attribution is required** and is shown in-app via `MODEL_CREDIT` in
+  `src/AimTrainer.jsx` — paste the exact Sketchfab model URL into `MODEL_CREDIT.url`.
+
 The app loads `/models/revolver.glb` automatically. If the file is missing, it
 falls back to the built-in procedural placeholder gun (no error).
 

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { TEXT, MODE_TEXT } from './translations.js';
 
 /* ------------------------------------------------------------------ *
  * Valorant Aim Trainer — "Micro Flicks"
@@ -49,103 +50,6 @@ const MODES = {
 };
 const MODE_ORDER = ['micro', 'wide', 'reflex', 'grid', 'head'];
 
-// --- i18n: UI strings in English & Indonesian ---
-const TEXT = {
-  en: {
-    subtitle: 'Aim Trainer',
-    mode: 'Mode',
-    timeRemaining: 'Time Remaining',
-    score: 'Score',
-    accuracy: 'Accuracy',
-    hits: 'Hits',
-    misses: 'Misses',
-    avgSplit: 'Avg Split',
-    bestScore: 'Best Score',
-    running: 'Running…',
-    reset: 'Reset',
-    settings: 'Settings',
-    sensitivity: 'Valorant Sensitivity',
-    targetSize: 'Target Size',
-    crosshair: 'Crosshair',
-    color: 'Color',
-    size: 'Size',
-    tip: 'Click the arena to lock your mouse · Esc to release · Left-click to fire',
-    secondsOnClock: '60 seconds on the clock.',
-    startBtn: '▶ Start Practice',
-    resume: 'Click to resume aiming',
-    sessionComplete: 'Session Complete',
-    newRecord: '★ New Record',
-    best: 'Best',
-    playAgain: '↻ Play Again',
-    sayHello: 'Say hello 👋',
-    supportMsg:
-      'Enjoying the trainer? Support keeps it free & updated — or just drop a message. Thank you! 🙌',
-    donate: '☕ Buy me a coffee / Donate',
-    helloBtn: '💌 Say hello',
-    github: '🐙 GitHub',
-    fsEnter: 'Enter fullscreen',
-    fsExit: 'Exit fullscreen',
-    mobileMsg1:
-      'This trainer needs a mouse and the Pointer Lock API, which aren’t available on phones or tablets.',
-    mobileMsg2: 'Please open it on a PC or laptop 💻',
-  },
-  id: {
-    subtitle: 'Latihan Aim',
-    mode: 'Mode',
-    timeRemaining: 'Sisa Waktu',
-    score: 'Skor',
-    accuracy: 'Akurasi',
-    hits: 'Kena',
-    misses: 'Meleset',
-    avgSplit: 'Rata Jeda',
-    bestScore: 'Skor Terbaik',
-    running: 'Berjalan…',
-    reset: 'Reset',
-    settings: 'Pengaturan',
-    sensitivity: 'Sensitivitas Valorant',
-    targetSize: 'Ukuran Target',
-    crosshair: 'Crosshair',
-    color: 'Warna',
-    size: 'Ukuran',
-    tip: 'Klik arena untuk mengunci mouse · Esc untuk lepas · Klik kiri untuk menembak',
-    secondsOnClock: 'Waktu 60 detik.',
-    startBtn: '▶ Mulai Latihan',
-    resume: 'Klik untuk lanjut membidik',
-    sessionComplete: 'Sesi Selesai',
-    newRecord: '★ Rekor Baru',
-    best: 'Terbaik',
-    playAgain: '↻ Main Lagi',
-    sayHello: 'Sapa aku 👋',
-    supportMsg:
-      'Suka dengan trainer ini? Dukungan membuatnya tetap gratis & terus diperbarui — atau sekadar kirim pesan. Terima kasih! 🙌',
-    donate: '☕ Traktir kopi / Donasi',
-    helloBtn: '💌 Sapa aku',
-    github: '🐙 GitHub',
-    fsEnter: 'Layar penuh',
-    fsExit: 'Keluar layar penuh',
-    mobileMsg1:
-      'Trainer ini butuh mouse dan Pointer Lock API, yang tidak tersedia di HP atau tablet.',
-    mobileMsg2: 'Silakan buka di PC atau laptop 💻',
-  },
-};
-
-const MODE_TEXT = {
-  en: {
-    micro: { name: 'Micro Flicks', desc: 'Tight cluster at head height. Train tiny, precise corrections.' },
-    wide: { name: 'Wide Flicks', desc: 'One far-flung target at a time — big, fast angle snaps.' },
-    reflex: { name: 'Reflex Pop', desc: 'A single target pops at a random moment — destroy it ASAP.' },
-    grid: { name: 'Target Switch', desc: 'Many targets spread wide. Clear fast, switch smoothly (gridshot).' },
-    head: { name: 'Headshot Precision', desc: 'Small targets on the head line. Pure accuracy & placement.' },
-  },
-  id: {
-    micro: { name: 'Micro Flicks', desc: 'Kelompok rapat setinggi kepala. Latih koreksi kecil yang presisi.' },
-    wide: { name: 'Wide Flicks', desc: 'Satu target jauh tiap kali — sentakan sudut besar & cepat.' },
-    reflex: { name: 'Reflex Pop', desc: 'Satu target muncul di saat acak — hancurkan secepatnya.' },
-    grid: { name: 'Target Switch', desc: 'Banyak target tersebar luas. Bersihkan cepat, pindah mulus (gridshot).' },
-    head: { name: 'Headshot Precision', desc: 'Target kecil di garis kepala. Murni akurasi & penempatan.' },
-  },
-};
-
 /*
  * Valorant sensitivity matcher.
  * Valorant's yaw is a fixed 0.07° of rotation per mouse count, per 1.0 sens.
@@ -155,7 +59,7 @@ const MODE_TEXT = {
  */
 const VALORANT_YAW_CONSTANT = 0.07;
 
-export default function AimTrainer() {
+export default function AimTrainer({ onExit, lang, setLang }) {
   const mountRef = useRef(null);
   const rootRef = useRef(null);
   // All mutable engine/game data — lives outside React's render cycle so the
@@ -190,7 +94,6 @@ export default function AimTrainer() {
   );
   const mode = MODES[modeKey] || MODES.micro;
   const [modeOpen, setModeOpen] = useState(false);
-  const [lang, setLang] = useState(TEXT[savedSettings.lang] ? savedSettings.lang : 'en');
   const t = TEXT[lang] || TEXT.en;
   const modeText = (MODE_TEXT[lang] || MODE_TEXT.en)[modeKey] || MODE_TEXT.en.micro;
 
@@ -362,73 +265,8 @@ export default function AimTrainer() {
     dir.position.set(5, 12, 8);
     scene.add(dir);
 
-    /* ----------------- FPS viewmodel: hands + weapon (procedural) -----------
-     * Built from primitives (no external assets), parented to the camera so it
-     * tracks the view. Bottom-right placement like a real FPS hipfire model.
-     * ---------------------------------------------------------------------- */
+    /* ----------------- FPS viewmodel: GLB revolver only ----------------- */
     const weapon = new THREE.Group();
-    // Materials: gunmetal body, black accents, tan furniture, skin, dark glove.
-    const gunMat = new THREE.MeshStandardMaterial({ color: 0x363b44, roughness: 0.45, metalness: 0.7 });
-    const darkMat = new THREE.MeshStandardMaterial({ color: 0x121417, roughness: 0.35, metalness: 0.8 });
-    const tanMat = new THREE.MeshStandardMaterial({ color: 0x6f5a3c, roughness: 0.7, metalness: 0.15 });
-    // Warm "sawo matang" skin tone (typical Indonesian complexion).
-    const handMat = new THREE.MeshStandardMaterial({ color: 0xc08a55, roughness: 0.8 });
-
-    // Procedural gun parts live in their own group so we can hide them all at
-    // once if a realistic GLTF model loads successfully.
-    const gunProc = new THREE.Group();
-    weapon.add(gunProc);
-    const part = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0, parent = gunProc) => {
-      const m = new THREE.Mesh(geo, mat);
-      m.position.set(x, y, z);
-      m.rotation.set(rx, ry, rz);
-      parent.add(m);
-      return m;
-    };
-    // Cylinder helper aligned down-range (along local -Z).
-    const tube = (rTop, rBot, len, mat, x, y, z, parent = weapon) =>
-      part(new THREE.CylinderGeometry(rTop, rBot, len, 16), mat, x, y, z, Math.PI / 2, 0, 0, parent);
-
-    // ===== Cowboy revolver (Colt Single Action Army) — local -Z down-range =====
-    // Frame
-    part(new THREE.BoxGeometry(0.052, 0.11, 0.16), gunMat, 0, 0.0, 0.03);
-    // Long round barrel + ejector-rod housing underneath
-    tube(0.026, 0.026, 0.52, gunMat, 0, 0.03, -0.34);
-    tube(0.016, 0.016, 0.42, darkMat, 0, -0.012, -0.32);
-    // Prominent cylinder (the rotating chamber)
-    tube(0.055, 0.055, 0.13, gunMat, 0, 0.0, -0.05);
-    // Front blade sight
-    part(new THREE.BoxGeometry(0.01, 0.025, 0.02), darkMat, 0, 0.07, -0.58);
-    // Exposed hammer at the rear
-    part(new THREE.BoxGeometry(0.02, 0.055, 0.03), darkMat, 0, 0.07, 0.12, -0.45);
-    // Trigger guard + trigger
-    part(new THREE.BoxGeometry(0.04, 0.014, 0.05), gunMat, 0, -0.075, 0.07);
-    part(new THREE.BoxGeometry(0.009, 0.03, 0.013), darkMat, 0, -0.055, 0.07);
-    // Curved "plow handle" grip (two raked segments, ivory/wood)
-    part(new THREE.BoxGeometry(0.05, 0.12, 0.07), tanMat, 0, -0.11, 0.12, 0.45);
-    part(new THREE.BoxGeometry(0.048, 0.11, 0.075), tanMat, 0, -0.2, 0.19, 0.85);
-
-    // --- Single (left) skin-tone hand wrapping the grip + bare forearm ---
-    const buildHand = (gx, gy, gz, rot) => {
-      const hand = new THREE.Group();
-      hand.position.set(gx, gy, gz);
-      hand.rotation.set(rot, 0, 0.08);
-      weapon.add(hand);
-      part(new THREE.BoxGeometry(0.09, 0.075, 0.1), handMat, 0, 0, 0, 0, 0, 0, hand); // palm/back of hand
-      for (let i = 0; i < 4; i++) {
-        // fingers curling over the front (far side) of the grip
-        part(new THREE.BoxGeometry(0.08, 0.024, 0.034), handMat, 0, 0.016, -0.055 - i * 0.027, 0.6, 0, 0, hand);
-      }
-      // thumb on the near side (facing the camera) so it's clearly visible
-      part(new THREE.BoxGeometry(0.028, 0.07, 0.04), handMat, 0.055, 0.0, 0.03, 0.35, 0, -0.35, hand);
-      return hand;
-    };
-    buildHand(0.0, -0.13, 0.14, 0.55);
-
-    // Bare forearm (skin) running back to the bottom-right corner of the screen.
-    const lForearm = part(new THREE.CylinderGeometry(0.06, 0.08, 0.45, 14), handMat, 0.03, -0.28, 0.36);
-    lForearm.rotation.set(1.15, 0, -0.05);
-    weapon.add(lForearm); // keep the arm even if a GLTF gun replaces the body
 
     // Muzzle flash (hidden until a shot fires).
     const muzzle = new THREE.Mesh(
@@ -436,11 +274,11 @@ export default function AimTrainer() {
       new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.9 })
     );
     muzzle.rotation.x = -Math.PI / 2; // point down-range (-Z)
-    muzzle.position.set(0, 0.03, -0.62);
+    muzzle.position.set(0, -0.02, -0.32);
     muzzle.visible = false;
     weapon.add(muzzle);
     const muzzleLight = new THREE.PointLight(0xffcaa0, 0, 4);
-    muzzleLight.position.set(0, 0.03, -0.65);
+    muzzleLight.position.set(0, -0.02, -0.35);
     weapon.add(muzzleLight);
 
     // A soft fill light fixed to the camera so the viewmodel stays readable.
@@ -450,40 +288,42 @@ export default function AimTrainer() {
 
     // Base pose — raised & canted so the gripping hand stays in frame, with the
     // barrel angled toward the centre like Valorant's Sheriff viewmodel.
-    const VM_BASE = { x: 0.2, y: -0.22, z: -0.55, rx: 0, ry: 0.22, rz: 0.14 };
+    const VM_BASE = { x: 0.16, y: -0.22, z: -0.55, rx: 0, ry: 0.08, rz: 0.04 };
     weapon.position.set(VM_BASE.x, VM_BASE.y, VM_BASE.z);
     weapon.rotation.set(VM_BASE.rx, VM_BASE.ry, VM_BASE.rz);
     camera.add(weapon);
 
-    /* ---------------- Realistic weapon model (GLTF, optional) ----------------
-     * Drop a revolver/cowboy .glb into  public/models/revolver.glb  and it will
-     * replace the procedural placeholder. Every model differs, so tweak the
-     * transform below until it sits right in the hand (use the live values).
-     * ---------------------------------------------------------------------- */
-    const MODEL_URL = '/models/revolver.glb';
+    /* ---------------- Revolver model (GLB) ----------------
+     * Auto-centred & auto-scaled; tune fitLength / pos / rot to taste.
+     * -------------------------------------------------------------- */
+    const MODEL_URL = '/models/colt_navy_1851.glb';
     const MODEL_TF = {
-      scale: 1.0, //  ← shrink/grow to fit (e.g. 0.1 if the model is life-size)
-      pos: [0.0, -0.05, -0.2], //  ← x (right), y (up), z (forward = negative)
-      rot: [0, 0, 0], //  ← radians; many models need ry = Math.PI/2 or Math.PI
+      fitLength: 0.5, //  longest dimension, in viewmodel units
+      pos: [0.0, -0.09, -0.07], //  bottom-right placement
+      rot: [0, 0, 0], //  this model's muzzle already faces -Z
     };
     new GLTFLoader().load(
       MODEL_URL,
       (gltf) => {
         const model = gltf.scene;
-        model.scale.setScalar(MODEL_TF.scale);
-        model.position.set(...MODEL_TF.pos);
-        model.rotation.set(...MODEL_TF.rot);
-        gunProc.visible = false; // hide the procedural placeholder gun
-        weapon.add(model);
+        // Centre the raw mesh on its own origin (this model is far off-centre).
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3();
+        const center = new THREE.Vector3();
+        box.getSize(size);
+        box.getCenter(center);
+        model.position.set(-center.x, -center.y, -center.z);
+        // Wrap in a pivot we can freely scale / rotate / place.
+        const pivot = new THREE.Group();
+        pivot.add(model);
+        pivot.scale.setScalar(MODEL_TF.fitLength / Math.max(size.x, size.y, size.z));
+        pivot.rotation.set(...MODEL_TF.rot);
+        pivot.position.set(...MODEL_TF.pos);
+        weapon.add(pivot);
       },
       undefined,
       () => {
-        // No file yet — keep the built-in placeholder and hint in the console.
-        console.info(
-          '[AimTrainer] No %s found — using the built-in placeholder gun. ' +
-            'Add a .glb revolver to public/models/ to use a realistic model.',
-          MODEL_URL
-        );
+        console.info('[AimTrainer] Could not load %s', MODEL_URL);
       }
     );
 
@@ -883,13 +723,30 @@ export default function AimTrainer() {
       {/* ============================ SIDEBAR ============================ */}
       {!isFullscreen && (
       <aside className="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-white/5 bg-val-panel p-5">
-        <header>
-          <h1 className="text-xl font-black tracking-widest text-val-red">
-            VALORANT
-          </h1>
-          <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
-            {t.subtitle}
-          </p>
+        <header className="flex items-start justify-between">
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/img/app-icon.png"
+              alt="AIMKU"
+              className="h-9 w-9 rounded-xl shadow-[0_0_12px_rgba(0,229,192,0.3)]"
+            />
+            <div>
+              <h1 className="text-lg font-black tracking-widest text-val-red">AIMKU</h1>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">
+                {t.subtitle}
+              </p>
+            </div>
+          </div>
+          {onExit && (
+            <button
+              onClick={onExit}
+              disabled={isRunning}
+              title="Menu"
+              className="rounded-md border border-white/15 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
+            >
+              ← Menu
+            </button>
+          )}
         </header>
 
         {/* Mode selector — click to reveal the full list of modes */}
@@ -1059,13 +916,6 @@ export default function AimTrainer() {
           >
             {fps} FPS
           </div>
-          <button
-            onClick={() => setLang((l) => (l === 'en' ? 'id' : 'en'))}
-            title="Language"
-            className="rounded bg-black/50 px-2.5 py-1 text-xs font-bold leading-none text-slate-200 backdrop-blur transition hover:bg-black/70"
-          >
-            {lang === 'en' ? '🇬🇧 EN' : '🇮🇩 ID'}
-          </button>
           <button
             onClick={toggleFullscreen}
             title={isFullscreen ? t.fsExit : t.fsEnter}
@@ -1308,6 +1158,15 @@ const CONTACT = {
   github: 'https://github.com/', // ← replace with your profile
 };
 
+// Required attribution for the CC-BY Sketchfab models. Paste the exact model
+// page URLs so the credits link back to the sources.
+const CREDITS = [
+  {
+    text: 'Revolver: “1851 Colt Navy Revolver” by Steven Jurriaans (CC BY)',
+    url: 'https://sketchfab.com/',
+  },
+];
+
 function SupportBubble({ t }) {
   const [open, setOpen] = useState(false);
   return (
@@ -1340,6 +1199,19 @@ function SupportBubble({ t }) {
             >
               {t.github}
             </a>
+          </div>
+          <div className="mt-3 space-y-1 border-t border-white/5 pt-2">
+            {CREDITS.map((c) => (
+              <a
+                key={c.text}
+                href={c.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-[10px] leading-snug text-slate-500 hover:text-slate-300"
+              >
+                {c.text}
+              </a>
+            ))}
           </div>
         </div>
       )}
