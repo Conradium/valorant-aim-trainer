@@ -59,7 +59,7 @@ const MODE_ORDER = ['micro', 'wide', 'reflex', 'grid', 'head'];
  */
 const VALORANT_YAW_CONSTANT = 0.07;
 
-export default function AimTrainer({ onExit, lang, setLang }) {
+export default function AimTrainer({ onExit, lang, setLang, isMobile }) {
   const mountRef = useRef(null);
   const rootRef = useRef(null);
   // All mutable engine/game data — lives outside React's render cycle so the
@@ -118,28 +118,6 @@ export default function AimTrainer({ onExit, lang, setLang }) {
   const [isRunning, setIsRunning] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  // Block touch / mobile devices — the trainer needs a real mouse + Pointer Lock.
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const ua = /Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile|BlackBerry/i.test(
-      navigator.userAgent || ''
-    );
-    const coarse = window.matchMedia?.('(pointer: coarse)')?.matches;
-    const noLock = !document.documentElement.requestPointerLock;
-    return ua || coarse || noLock;
-  });
-  useEffect(() => {
-    const check = () => {
-      const ua = /Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile|BlackBerry/i.test(
-        navigator.userAgent || ''
-      );
-      const coarse = window.matchMedia?.('(pointer: coarse)')?.matches;
-      const noLock = !document.documentElement.requestPointerLock;
-      setIsMobile(ua || coarse || noLock);
-    };
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(SESSION_SECONDS);
   const [score, setScore] = useState(0);

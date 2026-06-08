@@ -17,6 +17,9 @@ export const TEXT = {
     creditsTip: 'Not affiliated with or endorsed by Riot Games.',
     footerText: 'aimku.xyz · a fan-made Valorant-style aim trainer (not affiliated with Riot Games)',
     langToggle: 'Language: EN',
+    mobileTitle: 'PC Required',
+    mobileText: 'This trainer needs a keyboard & mouse to lock the pointer. On mobile devices, you can view the Profile and Credits, but the practice arena is disabled.',
+    gotIt: 'Got It',
 
     // Aim Trainer
     subtitle: 'Aim Trainer',
@@ -73,6 +76,9 @@ export const TEXT = {
     creditsTip: 'Tidak berafiliasi dengan atau didukung oleh Riot Games.',
     footerText: 'aimku.xyz · alat latihan membidik buatan penggemar bergaya Valorant (tidak berafiliasi dengan Riot Games)',
     langToggle: 'Bahasa: ID',
+    mobileTitle: 'Butuh PC/Laptop',
+    mobileText: 'Latihan membidik ini membutuhkan mouse & keyboard di PC. Di perangkat HP/tablet, Anda hanya dapat melihat Profil dan Kredit, sementara arena latihan dinonaktifkan.',
+    gotIt: 'Dimengerti',
 
     // Aim Trainer
     subtitle: 'Latihan Aim',

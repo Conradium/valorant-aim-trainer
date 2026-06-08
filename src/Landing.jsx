@@ -12,10 +12,11 @@ function loadBest() {
   }
 }
 
-export default function Landing({ onPlay, lang, setLang }) {
+export default function Landing({ onPlay, lang, setLang, isMobile }) {
   const [panel, setPanel] = useState(null); // 'profile' | 'credits' | null
   const best = loadBest();
   const [name, setName] = useState(() => localStorage.getItem('vat_name') || 'Agent');
+  const [showMobileModal, setShowMobileModal] = useState(false);
   const t = TEXT[lang] || TEXT.en;
 
   useEffect(() => {
@@ -38,34 +39,34 @@ export default function Landing({ onPlay, lang, setLang }) {
       {/* Wind effect — flows right→left & slightly up, matching Jett's motion */}
       <WindFX />
       {/* ---------- Top bar ---------- */}
-      <header className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between px-8 py-5">
+      <header className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
         <div className="flex items-center gap-3">
           <img
             src="/img/app-icon.png"
             alt="AIMKU"
-            className="h-11 w-11 rounded-2xl shadow-[0_0_18px_rgba(0,229,192,0.35)]"
+            className="h-9 w-9 md:h-11 md:w-11 rounded-2xl shadow-[0_0_18px_rgba(0,229,192,0.35)]"
           />
           <div className="leading-tight">
-            <p className="text-lg font-black tracking-[0.3em] text-white">AIMKU</p>
-            <p className="text-[10px] tracking-[0.35em] text-slate-400">
+            <p className="text-base md:text-lg font-black tracking-[0.3em] text-white">AIMKU</p>
+            <p className="text-[9px] md:text-[10px] tracking-[0.35em] text-slate-400">
               {t.subtitle.toUpperCase()} · MICRO FLICKS
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">{t.bestScoreLabel}</p>
-          <p className="text-xl font-black tabular-nums text-val-accent">{best.score}</p>
+          <p className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-slate-400">{t.bestScoreLabel}</p>
+          <p className="text-lg md:text-xl font-black tabular-nums text-val-accent">{best.score}</p>
         </div>
       </header>
 
       {/* ---------- Left menu ---------- */}
-      <nav className="absolute left-12 top-1/2 flex -translate-y-1/2 flex-col gap-3">
+      <nav className="absolute left-6 md:left-12 top-1/2 flex -translate-y-1/2 flex-col gap-3">
         <button
-          onClick={onPlay}
+          onClick={isMobile ? () => setShowMobileModal(true) : onPlay}
           className="group flex items-center gap-3 text-left"
         >
-          <span className="h-10 w-1 bg-val-red transition-all group-hover:h-12" />
-          <span className="text-6xl font-black uppercase tracking-wider text-val-red drop-shadow-[0_2px_10px_rgba(255,70,85,0.5)] transition-transform group-hover:translate-x-1">
+          <span className="h-8 md:h-10 w-1 bg-val-red transition-all group-hover:h-10 md:group-hover:h-12" />
+          <span className="text-5xl md:text-6xl font-black uppercase tracking-wider text-val-red drop-shadow-[0_2px_10px_rgba(255,70,85,0.5)] transition-transform group-hover:translate-x-1">
             {t.play}
           </span>
         </button>
@@ -79,7 +80,7 @@ export default function Landing({ onPlay, lang, setLang }) {
       </nav>
 
       {/* ---------- Footer ---------- */}
-      <footer className="absolute bottom-4 left-8 text-[10px] tracking-widest text-slate-500">
+      <footer className="absolute bottom-4 left-6 right-6 md:left-8 md:right-auto text-[9px] md:text-[10px] tracking-widest text-slate-500 leading-normal">
         {t.footerText}
       </footer>
 
@@ -122,6 +123,20 @@ export default function Landing({ onPlay, lang, setLang }) {
           <p className="mt-4 text-[11px] leading-relaxed text-slate-400">
             {t.creditsTip}
           </p>
+        </Modal>
+      )}
+
+      {showMobileModal && (
+        <Modal title={t.mobileTitle} onClose={() => setShowMobileModal(false)}>
+          <p className="mb-6 text-xs md:text-sm leading-relaxed text-slate-300">
+            {t.mobileText}
+          </p>
+          <button
+            onClick={() => setShowMobileModal(false)}
+            className="w-full rounded bg-val-red py-2.5 text-xs md:text-sm font-bold uppercase tracking-wider text-white transition hover:brightness-110"
+          >
+            {t.gotIt}
+          </button>
         </Modal>
       )}
     </div>
@@ -170,8 +185,8 @@ function WindFX() {
 function MenuItem({ label, onClick }) {
   return (
     <button onClick={onClick} className="group flex items-center gap-3 text-left">
-      <span className="h-5 w-1 bg-transparent transition-all group-hover:bg-white" />
-      <span className="text-2xl font-black uppercase tracking-wider text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-white">
+      <span className="h-4 md:h-5 w-1 bg-transparent transition-all group-hover:bg-white" />
+      <span className="text-xl md:text-2xl font-black uppercase tracking-wider text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-white">
         {label}
       </span>
     </button>
@@ -181,11 +196,11 @@ function MenuItem({ label, onClick }) {
 function Modal({ title, children, onClose }) {
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={onClose}
     >
       <div
-        className="w-96 rounded-lg border border-white/10 bg-val-panel/95 p-6 shadow-2xl"
+        className="w-full max-w-md rounded-lg border border-white/10 bg-val-panel/95 p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
