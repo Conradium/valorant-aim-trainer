@@ -1,5 +1,5 @@
 // Cloudflare Worker API url
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+const API_URL = import.meta.env.VITE_API_URL || 'https://valorant-aim-trainer-backend.ediloupatty.workers.dev';
 
 /**
  * Gets or generates a unique Device ID for the browser/session.
