@@ -423,11 +423,21 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       // Use the event's own delta (reliable). We render once per frame, so
       // summing getCoalescedEvents() added no visual benefit and could feed in
       // spurious spikes — that was the "sudden flick" bug.
-      const dx = e.movementX || 0;
-      const dy = e.movementY || 0;
+      const rawDx = e.movementX || 0;
+      const rawDy = e.movementY || 0;
 
       // Reject non-physical spikes in any direction (up/down/sideways).
-      if (Math.abs(dx) > SPIKE || Math.abs(dy) > SPIKE) return;
+      // Checked on the raw CSS-pixel delta, before the DPI correction below.
+      if (Math.abs(rawDx) > SPIKE || Math.abs(rawDy) > SPIKE) return;
+
+      // Pointer Lock reports deltas in *CSS pixels*. On HiDPI screens or with OS
+      // display scaling / browser zoom (devicePixelRatio > 1), that's fewer units
+      // than the mouse's raw counts — so aim feels slower than the same sens in
+      // Valorant (which works in raw counts, independent of screen scaling).
+      // Convert back to physical device pixels so 0.07°/count holds 1:1.
+      const dpr = window.devicePixelRatio || 1;
+      const dx = rawDx * dpr;
+      const dy = rawDy * dpr;
 
       const rotPerCount = THREE.MathUtils.degToRad(
         cfgRef.current.sensitivity * VALORANT_YAW_CONSTANT
