@@ -54,6 +54,11 @@ export const TEXT = {
     newRecord: '★ New Record',
     best: 'Best',
     playAgain: '↻ Play Again',
+    changeModeTitle: 'Change Mode?',
+    changeModeMsg: 'Switching modes restarts the timer and score from the beginning.',
+    changeModeConfirm: 'Restart in new mode',
+    cancel: 'Cancel',
+    dontShowAgain: "Don't show this again",
     sayHello: 'Say hello 👋',
     supportMsg:
       'Enjoying the trainer? Support keeps it free & updated — or just drop a message. Thank you! 🙌',
@@ -121,6 +126,11 @@ export const TEXT = {
     newRecord: '★ Rekor Baru',
     best: 'Terbaik',
     playAgain: '↻ Main Lagi',
+    changeModeTitle: 'Ganti Mode?',
+    changeModeMsg: 'Mengganti mode akan mengulang timer & skor dari awal.',
+    changeModeConfirm: 'Ulang di mode baru',
+    cancel: 'Batal',
+    dontShowAgain: 'Jangan tampilkan lagi',
     sayHello: 'Sapa aku 👋',
     supportMsg:
       'Suka dengan trainer ini? Dukungan membuatnya tetap gratis & terus diperbarui — atau sekadar kirim pesan. Terima kasih! 🙌',
@@ -142,6 +152,7 @@ export const MODE_TEXT = {
     reflex: { name: 'Reflex Pop', desc: 'A single target pops at a random moment — destroy it ASAP.' },
     grid: { name: 'Target Switch', desc: 'Many targets spread wide. Clear fast, switch smoothly (gridshot).' },
     head: { name: 'Headshot Precision', desc: 'Small targets on the head line. Pure accuracy & placement.' },
+    strafe: { name: 'Counter-Strafe', desc: 'Strafe with A / D — shots scatter while moving. Stop (counter-strafe) before you fire.' },
   },
   id: {
     micro: { name: 'Micro Flicks', desc: 'Kelompok rapat setinggi kepala. Latih koreksi kecil yang presisi.' },
@@ -149,5 +160,6 @@ export const MODE_TEXT = {
     reflex: { name: 'Reflex Pop', desc: 'Satu target muncul di saat acak — hancurkan secepatnya.' },
     grid: { name: 'Target Switch', desc: 'Banyak target tersebar luas. Bersihkan cepat, pindah mulus (gridshot).' },
     head: { name: 'Headshot Precision', desc: 'Target kecil di garis kepala. Murni akurasi & penempatan.' },
+    strafe: { name: 'Counter-Strafe', desc: 'Geser pakai A / D — tembakan menyebar saat bergerak. Berhenti (counter-strafe) dulu baru tembak.' },
   },
 };

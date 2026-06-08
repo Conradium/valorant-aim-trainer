@@ -47,8 +47,14 @@ const MODES = {
     desc: 'Small targets on the head line. Pure accuracy & placement.',
     count: 3, spreadX: 2.4, spreadY: 0.45, centerY: 0.2, sizeScale: 0.55, reflex: false,
   },
+  strafe: {
+    name: 'Counter-Strafe',
+    desc: 'Strafe with A / D. Your shots scatter while moving — stop (counter-strafe) before you fire.',
+    // spreadY 0 → all targets sit on one flat head-height line (no high/low).
+    count: 3, spreadX: 2.6, spreadY: 0, centerY: 0.2, sizeScale: 1, reflex: false, counterStrafe: true,
+  },
 };
-const MODE_ORDER = ['micro', 'wide', 'reflex', 'grid', 'head'];
+const MODE_ORDER = ['micro', 'wide', 'reflex', 'grid', 'head', 'strafe'];
 
 /*
  * Valorant sensitivity matcher.
@@ -99,6 +105,15 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
   );
   const mode = MODES[modeKey] || MODES.micro;
   const [modeOpen, setModeOpen] = useState(false);
+  const [pendingMode, setPendingMode] = useState(null); // mode awaiting "restart timer" confirm
+  const [dontWarnAgain, setDontWarnAgain] = useState(false); // the dialog's checkbox
+  const [skipModeWarn, setSkipModeWarn] = useState(() => {
+    try {
+      return localStorage.getItem('vat_skipModeWarn') === '1';
+    } catch {
+      return false;
+    }
+  });
   const t = TEXT[lang] || TEXT.en;
   const modeText = (MODE_TEXT[lang] || MODE_TEXT.en)[modeKey] || MODE_TEXT.en.micro;
 
@@ -122,6 +137,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
   // --- Session stats (UI state) ---
   const [isRunning, setIsRunning] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [isMoving, setIsMoving] = useState(false); // strafing in Counter-Strafe mode
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(SESSION_SECONDS);
@@ -405,10 +421,24 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     // --- Pointer Lock controls ------------------------------------------------
     let yaw = 0;
     let pitch = 0;
+    let isCanvasLocked = false; // true while the pointer is locked to the canvas
     let justLocked = false; // skip the first move after (re)locking — see below
     // Any single event larger than this (px) is a Pointer Lock glitch, not real
     // input, so we drop it. Normal aim is well under this even on fast flicks.
     const SPIKE = 400;
+
+    // --- Counter-Strafe movement (A / D) — only the counterStrafe mode uses it ---
+    let moveLeft = false;
+    let moveRight = false;
+    let strafeVel = 0; // horizontal velocity (world units / sec)
+    let lastMoving = false; // edge-trigger for the dynamic crosshair
+    const STRAFE_MAX = 7; // top strafe speed
+    const STRAFE_ACCEL = 70; // ramp toward top speed
+    const STRAFE_FRICTION = 45; // slide-out decel when no key is held
+    const STRAFE_BRAKE = 140; // hard decel when pressing the opposite key (the counter-strafe)
+    const STRAFE_RANGE = 5; // clamp so the player stays inside the room
+    const STRAFE_ACC_THRESHOLD = 0.6; // at/below this speed, shots are accurate
+    const STRAFE_SPREAD_K = 0.03; // NDC aim error per unit of speed over threshold
 
     function onPointerMove(e) {
       if (document.pointerLockElement !== canvas) return;
@@ -451,7 +481,17 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     function onMouseDown() {
       if (!runningRef.current || document.pointerLockElement !== canvas) return;
       fireViewmodel(); // recoil + muzzle flash on every shot
-      raycaster.setFromCamera(CENTER, camera);
+      // Counter-Strafe: firing while moving scatters the shot away from the
+      // crosshair (accurate only once you've stopped).
+      let aimPt = CENTER;
+      if (cfgRef.current.mode.counterStrafe) {
+        const over = Math.abs(strafeVel) - STRAFE_ACC_THRESHOLD;
+        if (over > 0) {
+          const s = Math.min(over * STRAFE_SPREAD_K, 0.18);
+          aimPt = new THREE.Vector2((Math.random() * 2 - 1) * s, (Math.random() * 2 - 1) * s);
+        }
+      }
+      raycaster.setFromCamera(aimPt, camera);
       const hits = raycaster.intersectObjects(targets, false);
       if (hits.length > 0) {
         const hitMesh = hits[0].object;
@@ -470,8 +510,28 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
 
     function onPointerLockChange() {
       const locked = document.pointerLockElement === canvas;
-      if (locked) justLocked = true; // ignore the first (often bogus) delta
+      isCanvasLocked = locked;
+      if (locked) {
+        justLocked = true; // ignore the first (often bogus) delta
+      } else {
+        // Pausing kills any strafe momentum so you don't drift on resume.
+        strafeVel = 0;
+        moveLeft = false;
+        moveRight = false;
+        lastMoving = false;
+      }
       engine.current.setLocked(locked);
+    }
+
+    // Counter-Strafe keys (A / D, arrows). Booleans are only read by the
+    // counterStrafe mode's movement block, so other modes are unaffected.
+    function onKeyDown(e) {
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = true;
+      else if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = true;
+    }
+    function onKeyUp(e) {
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = false;
+      else if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
     }
 
     function requestLock() {
@@ -485,6 +545,8 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     canvas.addEventListener('click', requestLock);
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerlockchange', onPointerLockChange);
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
 
     // --- Render loop (uncapped for 144Hz+ displays) ---------------------------
     let animId;
@@ -498,6 +560,35 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       const now = performance.now();
       const dt = Math.min((now - lastFrame) / 1000, 0.05); // clamp huge tab-switch gaps
       lastFrame = now;
+
+      // --- Counter-Strafe: the player slides with A / D. Pressing the opposite
+      // key brakes hard (the counter-strafe); accuracy is handled in onMouseDown
+      // via a speed-based aim spread. ---
+      const curMode = cfgRef.current.mode;
+      if (curMode.counterStrafe && runningRef.current && isCanvasLocked) {
+        const input = (moveRight ? 1 : 0) - (moveLeft ? 1 : 0);
+        if (input !== 0) {
+          const braking = strafeVel !== 0 && Math.sign(input) !== Math.sign(strafeVel);
+          strafeVel += input * (braking ? STRAFE_BRAKE : STRAFE_ACCEL) * dt;
+          strafeVel = Math.max(-STRAFE_MAX, Math.min(STRAFE_MAX, strafeVel));
+        } else {
+          const dec = STRAFE_FRICTION * dt;
+          strafeVel = Math.abs(strafeVel) <= dec ? 0 : strafeVel - Math.sign(strafeVel) * dec;
+        }
+        camera.position.x += strafeVel * dt;
+        if (camera.position.x > STRAFE_RANGE) {
+          camera.position.x = STRAFE_RANGE;
+          strafeVel = 0;
+        } else if (camera.position.x < -STRAFE_RANGE) {
+          camera.position.x = -STRAFE_RANGE;
+          strafeVel = 0;
+        }
+        const moving = Math.abs(strafeVel) > STRAFE_ACC_THRESHOLD;
+        if (moving !== lastMoving) {
+          lastMoving = moving;
+          engine.current.onMoveState(moving);
+        }
+      }
 
       fpsAccum += dt;
       fpsFrames += 1;
@@ -543,12 +634,18 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         yaw = 0;
         pitch = 0;
         camera.rotation.set(0, 0, 0);
+        camera.position.set(0, 0, 0);
+        strafeVel = 0;
+        moveLeft = false;
+        moveRight = false;
+        lastMoving = false;
       },
       // Filled in below via the binding effect so they always hit fresh setState.
       onHit: () => {},
       onMiss: () => {},
       setLocked: () => {},
       onFps: () => {},
+      onMoveState: () => {},
     };
 
     return () => {
@@ -558,6 +655,8 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       canvas.removeEventListener('click', requestLock);
       document.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('pointerlockchange', onPointerLockChange);
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
       clearTargets();
       renderer.dispose();
       if (canvas.parentNode === mount) mount.removeChild(canvas);
@@ -593,14 +692,19 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       setMisses((m) => m + 1);
       addPopup('MISS', '#ff4655');
     };
-    engine.current.setLocked = (locked) => setIsLocked(locked);
+    engine.current.setLocked = (locked) => {
+      setIsLocked(locked);
+      if (!locked) setIsMoving(false); // clear the moving indicator while paused
+    };
     engine.current.onFps = (v) => setFps(v);
+    engine.current.onMoveState = (m) => setIsMoving(m);
   }, [hitSound, missSound, addPopup]);
 
   /* ------------------------------ Game control ------------------------------ */
   const endGame = useCallback(() => {
     runningRef.current = false;
     setIsRunning(false);
+    setIsMoving(false);
     if (document.pointerLockElement) document.exitPointerLock();
     engine.current?.clearTargets();
   }, []);
@@ -642,6 +746,44 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     setHasPlayed(false);
     engine.current?.resetView();
   }, [endGame]);
+
+  // Apply a mode and restart the round fresh. Pushes the new mode into the
+  // engine ref this same tick so fillTargets() uses it, and keeps
+  // requestPointerLock() inside the originating click gesture.
+  const applyModeChange = (key) => {
+    setModeKey(key);
+    cfgRef.current = { ...cfgRef.current, mode: MODES[key] };
+    startPractice();
+  };
+
+  // Picking a mode: switch freely when idle. Mid-round it restarts the timer &
+  // score, so warn first — unless the user opted out of the warning.
+  const handleModeSelect = (key) => {
+    setModeOpen(false);
+    if (key === modeKey) return;
+    if (!isRunning) {
+      setModeKey(key);
+    } else if (skipModeWarn) {
+      applyModeChange(key);
+    } else {
+      setDontWarnAgain(false);
+      setPendingMode(key);
+    }
+  };
+
+  const confirmModeChange = () => {
+    if (dontWarnAgain) {
+      setSkipModeWarn(true);
+      try {
+        localStorage.setItem('vat_skipModeWarn', '1');
+      } catch {
+        /* ignore storage block */
+      }
+    }
+    const key = pendingMode;
+    setPendingMode(null);
+    applyModeChange(key);
+  };
 
   /* -------------------------- 60s countdown timer --------------------------- */
   // (#1) Only counts down while the pointer is actually locked — pressing Esc
@@ -748,7 +890,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         <div className="relative">
           <button
             onClick={() => setModeOpen((o) => !o)}
-            disabled={isRunning}
+            disabled={isLocked}
             className="flex w-full items-center justify-between rounded-md border border-val-red/40 bg-val-red/10 px-3 py-2 text-left transition hover:bg-val-red/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <span>
@@ -759,15 +901,12 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
             </span>
             <span className="text-xs text-slate-400">{modeOpen ? '▲' : '▼'}</span>
           </button>
-          {modeOpen && !isRunning && (
+          {modeOpen && !isLocked && (
             <div className="absolute z-40 mt-1 w-full overflow-hidden rounded-md border border-white/10 bg-val-panel shadow-2xl">
               {MODE_ORDER.map((key) => (
                 <button
                   key={key}
-                  onClick={() => {
-                    setModeKey(key);
-                    setModeOpen(false);
-                  }}
+                  onClick={() => handleModeSelect(key)}
                   className={`block w-full border-l-2 px-3 py-2 text-left transition hover:bg-white/10 ${
                     key === modeKey
                       ? 'border-val-red bg-white/5'
@@ -895,7 +1034,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
 
         {/* Crosshair overlay — only while actively playing (not when paused) */}
         {isRunning && isLocked && (
-          <Crosshair color={crosshairColor} size={crosshairSize} />
+          <Crosshair color={crosshairColor} size={crosshairSize} moving={isMoving} />
         )}
 
         {/* Top-right controls: FPS meter + fullscreen toggle */}
@@ -999,6 +1138,41 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
           </div>
         )}
       </main>
+
+      {/* Confirm switching mode mid-round — it restarts the timer & score */}
+      {pendingMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-80 rounded-lg border border-val-red/30 bg-val-panel/95 p-6 text-center shadow-2xl">
+            <p className="text-lg font-black uppercase tracking-widest text-val-red">
+              {t.changeModeTitle}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">{t.changeModeMsg}</p>
+            <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 text-xs text-slate-400 hover:text-slate-200">
+              <input
+                type="checkbox"
+                checked={dontWarnAgain}
+                onChange={(e) => setDontWarnAgain(e.target.checked)}
+                className="h-3.5 w-3.5 cursor-pointer accent-val-red"
+              />
+              {t.dontShowAgain}
+            </label>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={confirmModeChange}
+                className="flex-1 rounded-md bg-val-red px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition hover:brightness-110"
+              >
+                {t.changeModeConfirm}
+              </button>
+              <button
+                onClick={() => setPendingMode(null)}
+                className="flex-1 rounded-md border border-white/15 px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-slate-300 transition hover:bg-white/10"
+              >
+                {t.cancel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1045,13 +1219,17 @@ function Slider({ label, value, min, max, step, onChange, display }) {
   );
 }
 
-function Crosshair({ color, size }) {
+function Crosshair({ color, size, moving }) {
   const thickness = 2;
-  const gap = 3;
+  // While strafing the crosshair blooms open & turns red — your shots are
+  // inaccurate until you stop (Valorant-style movement error feedback).
+  const gap = moving ? 11 : 3;
+  const c = moving ? '#ff4655' : color;
   const arm = {
     position: 'absolute',
-    background: color,
-    boxShadow: `0 0 2px ${color}`,
+    background: c,
+    boxShadow: `0 0 2px ${c}`,
+    transition: 'all 0.06s linear',
   };
   return (
     <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
@@ -1069,7 +1247,7 @@ function Crosshair({ color, size }) {
           position: 'absolute',
           width: thickness,
           height: thickness,
-          background: color,
+          background: c,
           left: -thickness / 2,
           top: -thickness / 2,
         }}
