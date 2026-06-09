@@ -183,43 +183,6 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
   }, []);
   const hitSound = useCallback(() => beep(880, 0.08, 'square', 0.12), [beep]);
   const missSound = useCallback(() => beep(160, 0.1, 'sawtooth', 0.06), [beep]);
-  const fireSound = useCallback(() => {
-    let ctx = audioRef.current;
-    if (!ctx) {
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
-      audioRef.current = ctx;
-    }
-    if (ctx.state === 'suspended') ctx.resume();
-    const t = ctx.currentTime;
-    
-    // Noise burst (Crack)
-    const bufferSize = ctx.sampleRate * 0.15;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    const noiseFilter = ctx.createBiquadFilter();
-    noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.value = 3000;
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.5, t);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-    noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
-    noise.start(t);
-
-    // Thump (Punch)
-    const osc = ctx.createOscillator();
-    const oscGain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(150, t);
-    osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
-    oscGain.gain.setValueAtTime(0.6, t);
-    oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-    osc.connect(oscGain).connect(ctx.destination);
-    osc.start(t);
-    osc.stop(t + 0.15);
-  }, []);
 
   /* ----------------------- Three.js scene (init once) ----------------------- */
   useEffect(() => {
@@ -535,7 +498,6 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
 
     function onMouseDown() {
       if (!runningRef.current || document.pointerLockElement !== canvas) return;
-      fireSound();
       fireViewmodel(); // recoil + muzzle flash on every shot
       // Counter-Strafe: firing while moving scatters the shot away from the
       // crosshair (accurate only once you've stopped).
