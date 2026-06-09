@@ -45,7 +45,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
 
   return (
     <div
-      className="relative h-screen w-screen overflow-hidden bg-val-dark font-sans text-white select-none"
+      className="relative h-[100dvh] w-screen overflow-hidden bg-val-dark font-sans text-white select-none"
       style={{
         backgroundImage: `linear-gradient(90deg, rgba(15,20,25,0.96) 0%, rgba(15,20,25,0.72) 26%, rgba(15,20,25,0.22) 58%, rgba(15,20,25,0.55) 100%), radial-gradient(70% 90% at 50% 100%, rgba(15,20,25,0.6), transparent 60%), url('${BG_URL}')`,
         backgroundSize: 'cover',
@@ -109,7 +109,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
             <span className="mb-1 block text-[10px] uppercase tracking-widest text-slate-400">
               {t.displayName}
             </span>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 value={tempName}
                 onChange={(e) => setTempName(e.target.value)}
@@ -119,12 +119,12 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
                   }
                 }}
                 maxLength={20}
-                className="flex-1 rounded-2xl bg-black/20 px-4 py-2.5 text-sm text-white outline-none border border-white/10 focus:border-val-accent focus:bg-white/10 transition-all shadow-inner"
+                className="w-full sm:flex-1 rounded-2xl bg-black/20 px-4 py-2.5 text-sm text-white outline-none border border-white/10 focus:border-val-accent focus:bg-white/10 transition-all shadow-inner"
               />
               <button
                 onClick={handleSave}
                 disabled={tempName.trim() === name || !tempName.trim()}
-                className={`rounded-2xl px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all ${
+                className={`w-full sm:w-auto rounded-2xl px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all ${
                   tempName.trim() === name || !tempName.trim()
                     ? 'bg-white/5 border border-white/10 text-slate-400 cursor-not-allowed'
                     : 'bg-white/20 border border-white/30 backdrop-blur hover:bg-white/30 hover:scale-105 active:scale-95'
@@ -309,7 +309,7 @@ function Modal({ title, children, onClose }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md max-h-[85vh] overflow-y-auto no-scrollbar rounded-[2rem] border border-white/20 bg-white/10 p-7 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-xl backdrop-saturate-150"
+        className="w-full max-w-md max-h-[80dvh] overflow-y-auto no-scrollbar rounded-[1.5rem] md:rounded-[2rem] border border-white/20 bg-white/10 p-5 md:p-7 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-xl backdrop-saturate-150"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
