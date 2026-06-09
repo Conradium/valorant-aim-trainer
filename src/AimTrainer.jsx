@@ -219,6 +219,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: 'high-performance',
+      desynchronized: true, // Bypasses OS compositor for minimum latency
     });
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -557,7 +558,13 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     function requestLock() {
       // Re-lock when the user clicks the canvas mid-session (e.g. after Esc).
       if (runningRef.current && document.pointerLockElement !== canvas) {
-        canvas.requestPointerLock();
+        try {
+          // Request raw mouse input (bypasses OS acceleration) for true 1:1 aim
+          const promise = canvas.requestPointerLock({ unadjustedMovement: true });
+          if (promise) promise.catch(() => canvas.requestPointerLock());
+        } catch (e) {
+          canvas.requestPointerLock();
+        }
       }
     }
 
@@ -672,7 +679,14 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       spawnTarget,
       clearTargets,
       fillTargets,
-      requestLock: () => canvas.requestPointerLock(),
+      requestLock: () => {
+        try {
+          const promise = canvas.requestPointerLock({ unadjustedMovement: true });
+          if (promise) promise.catch(() => canvas.requestPointerLock());
+        } catch (e) {
+          canvas.requestPointerLock();
+        }
+      },
       resize: onResize,
       resetView: () => {
         yaw = 0;
