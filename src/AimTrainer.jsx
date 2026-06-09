@@ -718,11 +718,6 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     setIsMoving(false);
     if (document.pointerLockElement) document.exitPointerLock();
     engine.current?.clearTargets();
-    
-    // Auto-exit fullscreen when the game ends
-    if (document.fullscreenElement && document.exitFullscreen) {
-      document.exitFullscreen().catch(() => {});
-    }
   }, []);
 
   const startPractice = useCallback(() => {
@@ -745,11 +740,6 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     runningRef.current = true;
     setIsRunning(true);
     engine.current.requestLock(); // button click is a valid user gesture
-    
-    // Auto-enter fullscreen when starting practice
-    if (!document.fullscreenElement && rootRef.current?.requestFullscreen) {
-      rootRef.current.requestFullscreen().catch(() => {});
-    }
 
     // Warm up audio context on the gesture.
     beep(0.0001, 0.01);
@@ -880,7 +870,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       className="flex h-screen w-screen bg-val-dark font-sans text-slate-200 select-none"
     >
       {/* ============================ SIDEBAR ============================ */}
-      {!isFullscreen && (
+      {!isFullscreen && !isRunning && (
       <aside className="no-scrollbar flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
         <header className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
