@@ -286,7 +286,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
 
     // Base pose — raised & canted so the gripping hand stays in frame, with the
     // barrel angled toward the centre like Valorant's Sheriff viewmodel.
-    const VM_BASE = { x: 0.16, y: -0.22, z: -0.55, rx: 0, ry: 0.08, rz: 0.04 };
+    const VM_BASE = { x: 0.17, y: -0.13, z: -0.55, rx: 0.02, ry: 0.10, rz: 0.04 };
     weapon.position.set(VM_BASE.x, VM_BASE.y, VM_BASE.z);
     weapon.rotation.set(VM_BASE.rx, VM_BASE.ry, VM_BASE.rz);
     camera.add(weapon);
