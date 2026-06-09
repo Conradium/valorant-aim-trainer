@@ -866,11 +866,11 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
   return (
     <div
       ref={rootRef}
-      className="flex h-screen w-screen bg-val-dark font-mono text-slate-200 select-none"
+      className="flex h-screen w-screen bg-val-dark font-sans text-slate-200 select-none"
     >
       {/* ============================ SIDEBAR ============================ */}
       {!isFullscreen && (
-      <aside className="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-white/5 bg-val-panel p-5">
+      <aside className="flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
         <header className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
             <img
@@ -890,7 +890,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
               onClick={onExit}
               disabled={isRunning}
               title="Menu"
-              className="rounded-md border border-white/15 px-2.5 py-1 text-xs font-bold text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
+              className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold text-slate-200 shadow-sm transition-all hover:bg-white/20 disabled:opacity-40"
             >
               ← Menu
             </button>
@@ -902,7 +902,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
           <button
             onClick={() => setModeOpen((o) => !o)}
             disabled={isLocked}
-            className="flex w-full items-center justify-between rounded-md border border-val-red/40 bg-val-red/10 px-3 py-2 text-left transition hover:bg-val-red/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-between rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-4 py-3 text-left shadow-inner transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <span>
               <span className="block text-[10px] uppercase tracking-widest text-slate-400">
@@ -913,7 +913,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
             <span className="text-xs text-slate-400">{modeOpen ? '▲' : '▼'}</span>
           </button>
           {modeOpen && !isLocked && (
-            <div className="absolute z-40 mt-1 w-full overflow-hidden rounded-md border border-white/10 bg-val-panel shadow-2xl">
+            <div className="absolute z-40 mt-2 w-full overflow-hidden rounded-2xl border border-white/20 bg-black/60 backdrop-blur-xl shadow-2xl">
               {MODE_ORDER.map((key) => (
                 <button
                   key={key}
@@ -937,7 +937,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         </div>
 
         {/* Timer */}
-        <div className="rounded-md bg-black/30 p-3 text-center">
+        <div className="rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md p-4 text-center shadow-inner">
           <p className="text-[10px] uppercase tracking-widest text-slate-400">
             {t.timeRemaining}
           </p>
@@ -969,20 +969,20 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
           <button
             onClick={startPractice}
             disabled={isRunning}
-            className="flex-1 rounded-md bg-val-red px-3 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 rounded-2xl bg-white/20 border border-white/30 backdrop-blur-md px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:bg-white/30 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
           >
             {isRunning ? t.running : t.startBtn.replace('▶ ', '')}
           </button>
           <button
             onClick={reset}
-            className="rounded-md border border-white/15 px-3 py-2.5 text-sm font-bold uppercase tracking-wider text-slate-300 transition hover:bg-white/10"
+            className="rounded-2xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-sm font-bold uppercase tracking-wider text-slate-200 shadow-sm transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
           >
             {t.reset}
           </button>
         </div>
 
         {/* Settings panel */}
-        <div className="mt-1 space-y-4 rounded-md bg-black/20 p-4">
+        <div className="mt-2 space-y-5 rounded-3xl bg-white/5 border border-white/10 p-5 shadow-inner">
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-400">
             {t.settings}
           </p>
@@ -1051,7 +1051,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         {/* Top-right controls: FPS meter + fullscreen toggle */}
         <div className="absolute right-4 top-4 z-30 flex items-center gap-2">
           <div
-            className={`rounded bg-black/50 px-2.5 py-1 text-xs font-bold tabular-nums backdrop-blur ${
+            className={`rounded-full bg-black/40 border border-white/10 px-3 py-1.5 text-xs font-bold tabular-nums backdrop-blur-md shadow-sm ${
               fps >= 120
                 ? 'text-emerald-400'
                 : fps >= 60
@@ -1064,7 +1064,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
           <button
             onClick={toggleFullscreen}
             title={isFullscreen ? t.fsExit : t.fsEnter}
-            className="rounded bg-black/50 px-2.5 py-1 text-sm leading-none text-slate-200 backdrop-blur transition hover:bg-black/70"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-black/40 text-sm leading-none text-slate-200 shadow-sm backdrop-blur-md transition-all hover:scale-105 hover:bg-black/60 active:scale-95"
           >
             {isFullscreen ? '🗗' : '⛶'}
           </button>
@@ -1095,7 +1095,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
 
         {/* Idle / paused overlays */}
         {!isRunning && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/45 backdrop-blur-[2px]">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-md transition-all">
             <div className="pointer-events-auto text-center">
               {hasPlayed && timeLeft === 0 ? (
                 <SessionSummary
@@ -1120,7 +1120,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
                   </p>
                   <button
                     onClick={startPractice}
-                    className="mt-5 rounded-md bg-val-red px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition hover:brightness-110"
+                    className="mt-6 rounded-3xl bg-white/20 border border-white/30 backdrop-blur-md px-8 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] transition hover:bg-white/30 hover:scale-105 active:scale-95"
                   >
                     {t.startBtn}
                   </button>
@@ -1133,7 +1133,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         {/* Click-to-resume hint when running but pointer not locked */}
         {isRunning && !isLocked && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <p className="rounded bg-black/70 px-4 py-2 text-sm font-bold uppercase tracking-widest text-white">
+            <p className="rounded-full border border-white/20 bg-black/50 backdrop-blur-md px-5 py-2.5 text-sm font-bold uppercase tracking-widest text-white shadow-lg">
               {t.resume}
             </p>
           </div>
@@ -1141,7 +1141,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
 
         {/* Live mini HUD top-center */}
         {isRunning && (
-          <div className="pointer-events-none absolute left-1/2 top-4 flex -translate-x-1/2 gap-6 rounded-md bg-black/40 px-5 py-2 text-sm font-bold tabular-nums backdrop-blur">
+          <div className="pointer-events-none absolute left-1/2 top-5 flex -translate-x-1/2 gap-8 rounded-full border border-white/10 bg-black/40 px-6 py-2.5 text-sm font-bold tabular-nums backdrop-blur-md shadow-md">
             <span className="text-val-accent">{score}</span>
             <span className="text-slate-300">{accuracy.toFixed(0)}%</span>
             <span className={timeLeft <= 10 ? 'text-val-red' : 'text-white'}>
@@ -1153,8 +1153,8 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
 
       {/* Confirm switching mode mid-round — it restarts the timer & score */}
       {pendingMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-80 rounded-lg border border-val-red/30 bg-val-panel/95 p-6 text-center shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-md transition-all">
+          <div className="w-80 rounded-[2rem] border border-white/20 bg-white/10 p-7 text-center shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-xl backdrop-saturate-150">
             <p className="text-lg font-black uppercase tracking-widest text-val-red">
               {t.changeModeTitle}
             </p>
@@ -1171,13 +1171,13 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
             <div className="mt-5 flex gap-2">
               <button
                 onClick={confirmModeChange}
-                className="flex-1 rounded-md bg-val-red px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition hover:brightness-110"
+                className="flex-1 rounded-2xl bg-white/20 border border-white/30 backdrop-blur-md px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:bg-white/30 hover:scale-105 active:scale-95"
               >
                 {t.changeModeConfirm}
               </button>
               <button
                 onClick={() => setPendingMode(null)}
-                className="flex-1 rounded-md border border-white/15 px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-slate-300 transition hover:bg-white/10"
+                className="flex-1 rounded-2xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-slate-200 shadow-sm transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
               >
                 {t.cancel}
               </button>
@@ -1201,7 +1201,7 @@ function Stat({ label, value, accent, good, bad, wide }) {
     : 'text-white';
   return (
     <div
-      className={`rounded-md bg-black/25 p-2.5 ${wide ? 'col-span-2' : ''}`}
+      className={`rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-3 shadow-inner ${wide ? 'col-span-2' : ''}`}
     >
       <p className="text-[10px] uppercase tracking-widest text-slate-400">
         {label}
@@ -1270,7 +1270,7 @@ function Crosshair({ color, size, moving }) {
 
 function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t, splitLabel, onAgain }) {
   return (
-    <div className="w-80 rounded-lg border border-white/10 bg-val-panel/95 p-6 shadow-2xl">
+    <div className="w-[22rem] rounded-[2rem] border border-white/20 bg-white/10 p-7 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-xl backdrop-saturate-150">
       <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
         {t.sessionComplete}
       </p>
@@ -1293,7 +1293,7 @@ function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t
       </div>
       <button
         onClick={onAgain}
-        className="mt-6 w-full rounded-md bg-val-red px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition hover:brightness-110"
+        className="mt-6 w-full rounded-2xl bg-white/20 border border-white/30 backdrop-blur-md px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:bg-white/30 hover:scale-105 active:scale-95"
       >
         {t.playAgain}
       </button>
@@ -1322,7 +1322,7 @@ function HitMarker({ color }) {
 
 function SummaryRow({ label, value }) {
   return (
-    <div className="rounded bg-black/30 px-3 py-2">
+    <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md px-4 py-3 shadow-inner">
       <p className="text-[10px] uppercase tracking-widest text-slate-400">
         {label}
       </p>

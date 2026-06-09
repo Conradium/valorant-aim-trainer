@@ -45,7 +45,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
 
   return (
     <div
-      className="relative h-screen w-screen overflow-hidden bg-val-dark font-mono text-white select-none"
+      className="relative h-screen w-screen overflow-hidden bg-val-dark font-sans text-white select-none"
       style={{
         backgroundImage: `linear-gradient(90deg, rgba(15,20,25,0.96) 0%, rgba(15,20,25,0.72) 26%, rgba(15,20,25,0.22) 58%, rgba(15,20,25,0.55) 100%), radial-gradient(70% 90% at 50% 100%, rgba(15,20,25,0.6), transparent 60%), url('${BG_URL}')`,
         backgroundSize: 'cover',
@@ -119,15 +119,15 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
                   }
                 }}
                 maxLength={20}
-                className="flex-1 rounded bg-black/40 px-3 py-2 text-sm text-white outline-none ring-1 ring-white/10 focus:ring-val-red"
+                className="flex-1 rounded-2xl bg-black/20 px-4 py-2.5 text-sm text-white outline-none border border-white/10 focus:border-val-accent focus:bg-white/10 transition-all shadow-inner"
               />
               <button
                 onClick={handleSave}
                 disabled={tempName.trim() === name || !tempName.trim()}
-                className={`rounded px-4 py-2 text-sm font-bold uppercase tracking-wider text-white transition ${
+                className={`rounded-2xl px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all ${
                   tempName.trim() === name || !tempName.trim()
-                    ? 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
-                    : 'bg-val-red hover:brightness-110'
+                    ? 'bg-white/5 border border-white/10 text-slate-400 cursor-not-allowed'
+                    : 'bg-white/20 border border-white/30 backdrop-blur hover:bg-white/30 hover:scale-105 active:scale-95'
                 }`}
               >
                 {t.save}
@@ -179,8 +179,8 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
                 return (
                   <li
                     key={i}
-                    className={`flex items-center gap-3 rounded-md px-3 py-2 ${
-                      isYou ? 'bg-val-red/15 ring-1 ring-val-red/40' : 'bg-black/30'
+                    className={`flex items-center gap-3 rounded-2xl px-4 py-3 border transition-all ${
+                      isYou ? 'bg-white/20 border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'bg-black/20 border-white/5'
                     }`}
                   >
                     <span className="w-7 shrink-0 text-center text-sm font-black tabular-nums text-slate-400">
@@ -213,13 +213,13 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               href={CONTACT.donate}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-lg bg-val-red px-3 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-white/20 border border-white/30 backdrop-blur px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-white/30 hover:scale-105 active:scale-95"
             >
               {t.donate}
             </a>
             <a
               href={`mailto:${CONTACT.email}`}
-              className="flex items-center justify-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-sm font-bold text-slate-200 transition hover:bg-white/10"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 backdrop-blur px-4 py-3 text-sm font-bold text-slate-200 transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
             >
               {t.helloBtn}
             </a>
@@ -227,7 +227,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               href={CONTACT.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-sm font-bold text-slate-200 transition hover:bg-white/10"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 backdrop-blur px-4 py-3 text-sm font-bold text-slate-200 transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
             >
               {t.github}
             </a>
@@ -242,7 +242,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
           </p>
           <button
             onClick={() => setShowMobileModal(false)}
-            className="w-full rounded bg-val-red py-2.5 text-xs md:text-sm font-bold uppercase tracking-wider text-white transition hover:brightness-110"
+            className="w-full rounded-2xl bg-white/20 border border-white/30 backdrop-blur py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:bg-white/30 hover:scale-105 active:scale-95"
           >
             {t.gotIt}
           </button>
@@ -305,11 +305,11 @@ function MenuItem({ label, onClick }) {
 function Modal({ title, children, onClose }) {
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 transition-all"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-white/10 bg-val-panel/95 p-6 shadow-2xl"
+        className="w-full max-w-md rounded-[2rem] border border-white/20 bg-white/10 p-7 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-xl backdrop-saturate-150"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -329,7 +329,7 @@ function Modal({ title, children, onClose }) {
 
 function Stat({ label, value, accent }) {
   return (
-    <div className="rounded-md bg-black/30 p-2.5 text-center">
+    <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md p-3 text-center shadow-inner">
       <p className="text-[9px] uppercase tracking-widest text-slate-400">{label}</p>
       <p className={`text-lg font-black tabular-nums ${accent ? 'text-val-accent' : 'text-white'}`}>
         {value}
