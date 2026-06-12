@@ -968,7 +968,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     >
       {/* ============================ SIDEBAR ============================ */}
       {!isFullscreen && (!isRunning || !isLocked) && (
-      <aside className="no-scrollbar flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto p-6 glass-card" style={{ borderRadius: 0, borderRight: '1px solid rgba(255,255,255,0.08)' }}>
+      <aside className="no-scrollbar flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto p-6 glass-panel">
         <header className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
             <img
@@ -1010,7 +1010,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
             <span className="text-xs text-slate-400">{modeOpen ? '▲' : '▼'}</span>
           </button>
           {modeOpen && !isLocked && (
-            <div className="absolute z-40 mt-2 w-full overflow-hidden rounded-2xl glass-card shadow-2xl">
+            <div className="absolute z-40 mt-2 w-full overflow-hidden rounded-2xl glass shadow-2xl">
               {MODE_ORDER.map((key) => (
                 <button
                   key={key}

@@ -22,265 +22,137 @@ body,
 }
 
 /* ============================================================
- * LIQUID GLASS SYSTEM
- * A layered approach: noise + specular highlight + chromatic
- * border + refraction body + depth shadow.
+ * LIQUID GLASS SYSTEM — Clean, transparent, Apple-style
+ *
+ * Core principle: the background must be VISIBLE through the
+ * glass (blurred & tinted), with a single specular rim on top.
+ * No overflow:hidden — that kills scrollable containers.
  * ============================================================ */
 
 /**
- * Base glass layer — the frosted body.
- * backdrop-filter does the heavy lifting (blur + saturate + brightness).
+ * .glass — Standard frosted panel
+ * Use on cards, stat boxes, small containers.
  */
 .glass {
-  position: relative;
-  background:
-    /* Top specular highlight — simulates light hitting the curved glass surface */
-    linear-gradient(
-      160deg,
-      rgba(255, 255, 255, 0.22) 0%,
-      rgba(255, 255, 255, 0.06) 40%,
-      rgba(255, 255, 255, 0.00) 70%
-    ),
-    /* Body fill — slightly warmer than neutral to feel "alive" */
-    rgba(255, 255, 255, 0.07);
-  backdrop-filter: blur(28px) saturate(180%) brightness(1.08);
-  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.08);
-  border: 1px solid transparent;
-  /* Chromatic aberration on the border: red channel shifts slightly left, blue right.
-     Achieved via a multi-stop gradient border using background-clip trick. */
-  background-clip: padding-box;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px) saturate(160%) brightness(1.04);
+  -webkit-backdrop-filter: blur(20px) saturate(160%) brightness(1.04);
+  border: 1px solid rgba(255, 255, 255, 0.11);
   box-shadow:
-    /* Outer glow — soft depth */
-    0 8px 40px rgba(0, 0, 0, 0.35),
-    0 2px 8px rgba(0, 0, 0, 0.25),
-    /* Inner specular rim — the top-left bright edge of real glass */
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.28),
-    inset 1px 0 1px rgba(255, 255, 255, 0.12),
-    /* Bottom inner shadow — depth, like light doesn't reach the bottom */
-    inset 0 -1px 1px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  will-change: transform;
-  transition: box-shadow 0.2s ease, transform 0.15s ease;
+    /* Top specular rim */
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    /* Soft depth shadow */
+    0 4px 20px rgba(0, 0, 0, 0.28);
+  transition: box-shadow 0.18s ease, background 0.18s ease;
 }
 
-/* Pseudo-element: prismatic border ring using conic gradient */
-.glass::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: conic-gradient(
-    from 130deg,
-    rgba(255, 70, 85, 0.55)   0deg,
-    rgba(255, 255, 255, 0.55) 60deg,
-    rgba(0, 229, 192, 0.45)   120deg,
-    rgba(100, 180, 255, 0.35) 180deg,
-    rgba(255, 255, 255, 0.20) 240deg,
-    rgba(255, 70, 85, 0.25)   300deg,
-    rgba(255, 255, 255, 0.55) 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.65;
-  transition: opacity 0.25s ease;
-}
-
-/* Pseudo-element: animated shimmer/sheen — sweeps left-to-right on hover */
-.glass::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    105deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.10) 50%,
-    transparent 60%
-  );
-  background-size: 200% 100%;
-  background-position: 200% 0;
-  transition: background-position 0.55s ease;
-  pointer-events: none;
-}
-
-.glass:hover::after {
-  background-position: -100% 0;
-}
-
-/* Hover: deepen the glow and slightly lift */
 .glass:hover {
+  background: rgba(255, 255, 255, 0.09);
   box-shadow:
-    0 12px 56px rgba(0, 0, 0, 0.45),
-    0 4px 16px rgba(0, 0, 0, 0.3),
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.35),
-    inset 1px 0 1px rgba(255, 255, 255, 0.18),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.18);
-  transform: translateY(-1px);
-}
-
-/* Hover: brighten the prismatic border */
-.glass:hover::before {
-  opacity: 0.9;
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    0 6px 28px rgba(0, 0, 0, 0.36);
 }
 
 /**
- * Glass card variant — stronger blur, more opaque for cards/panels.
- * Extends .glass with a more prominent body.
+ * .glass-panel — Sidebar / tall panel
+ * Stronger blur, NO overflow:hidden so children can scroll freely.
+ */
+.glass-panel {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  backdrop-filter: blur(36px) saturate(180%) brightness(1.06);
+  -webkit-backdrop-filter: blur(36px) saturate(180%) brightness(1.06);
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.08),
+    8px 0 40px rgba(0, 0, 0, 0.35);
+}
+
+/**
+ * .glass-card — Modal / floating card
+ * Strongest variant. overflow:hidden is safe here since
+ * cards don't need internal scrolling (use no-scrollbar manually if needed).
  */
 .glass-card {
-  position: relative;
-  background:
-    linear-gradient(
-      155deg,
-      rgba(255, 255, 255, 0.20) 0%,
-      rgba(255, 255, 255, 0.04) 45%,
-      rgba(0, 229, 192, 0.02) 100%
-    ),
-    rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(40px) saturate(200%) brightness(1.10);
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.10);
-  border: 1px solid transparent;
-  background-clip: padding-box;
-  box-shadow:
-    0 16px 64px rgba(0, 0, 0, 0.50),
-    0 4px 16px rgba(0, 0, 0, 0.30),
-    inset 0 2px 2px rgba(255, 255, 255, 0.30),
-    inset 1px 0 1px rgba(255, 255, 255, 0.15),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.20);
-  overflow: hidden;
-  will-change: transform;
-}
-
-/* Prismatic border for card variant — slightly stronger */
-.glass-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: conic-gradient(
-    from 200deg,
-    rgba(255, 255, 255, 0.70) 0deg,
-    rgba(0, 229, 192, 0.55)   60deg,
-    rgba(100, 180, 255, 0.40) 120deg,
-    rgba(255, 255, 255, 0.20) 180deg,
-    rgba(255, 70, 85, 0.35)   240deg,
-    rgba(255, 255, 255, 0.70) 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.70;
-}
-
-/* Sheen sweep for card */
-.glass-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
   background: linear-gradient(
-    105deg,
-    transparent 35%,
-    rgba(255, 255, 255, 0.08) 50%,
-    transparent 65%
+    145deg,
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.05) 60%,
+    rgba(255, 255, 255, 0.02) 100%
   );
-  background-size: 200% 100%;
-  background-position: 200% 0;
-  transition: background-position 0.6s ease;
-  pointer-events: none;
-}
-
-.glass-card:hover::after {
-  background-position: -100% 0;
+  backdrop-filter: blur(40px) saturate(200%) brightness(1.08);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    /* Top specular rim — the most important glass cue */
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.32),
+    /* Left rim */
+    inset 1px 0 0 rgba(255, 255, 255, 0.10),
+    /* Bottom inner shadow */
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    /* Outer glow */
+    0 16px 56px rgba(0, 0, 0, 0.50),
+    0 4px 16px rgba(0, 0, 0, 0.30);
 }
 
 /**
- * Glass button — more saturated, interactive feel with active press.
+ * .glass-btn — Interactive button
+ * Has full hover + active states.
  */
 .glass-btn {
-  position: relative;
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.25) 0%,
-      rgba(255, 255, 255, 0.08) 50%,
-      rgba(255, 255, 255, 0.04) 100%
-    );
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid transparent;
-  background-clip: padding-box;
-  box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.25),
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.32),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-  transition: all 0.15s ease;
-  will-change: transform;
-}
-
-.glass-btn::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: conic-gradient(
-    from 90deg,
-    rgba(255, 255, 255, 0.60) 0deg,
-    rgba(255, 255, 255, 0.20) 90deg,
-    rgba(255, 255, 255, 0.08) 180deg,
-    rgba(255, 255, 255, 0.35) 270deg,
-    rgba(255, 255, 255, 0.60) 360deg
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.20) 0%,
+    rgba(255, 255, 255, 0.08) 100%
   );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    0 2px 10px rgba(0, 0, 0, 0.22);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+  cursor: pointer;
 }
 
 .glass-btn:hover {
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.35) 0%,
-      rgba(255, 255, 255, 0.14) 50%,
-      rgba(255, 255, 255, 0.08) 100%
-    );
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.30) 0%,
+    rgba(255, 255, 255, 0.14) 100%
+  );
   box-shadow:
-    0 6px 28px rgba(0, 0, 0, 0.32),
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.45),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.15);
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 6px 24px rgba(0, 0, 0, 0.30);
   transform: translateY(-1px) scale(1.02);
 }
 
 .glass-btn:active {
-  transform: translateY(1px) scale(0.97);
+  transform: translateY(0) scale(0.97);
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.25),
-    inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    inset 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
-/* Slim range sliders to fit the gaming aesthetic */
+/* Disabled state — no blur, flat */
+.glass-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Slim range sliders */
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   height: 4px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.10);
   outline: none;
-  backdrop-filter: blur(4px);
 }
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -290,12 +162,12 @@ input[type='range']::-webkit-slider-thumb {
   border-radius: 9999px;
   background: #ff4655;
   cursor: pointer;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 8px rgba(255, 70, 85, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 8px rgba(255, 70, 85, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 input[type='range']::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.25);
   box-shadow: 0 0 14px rgba(255, 70, 85, 0.7), 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 input[type='range']::-moz-range-thumb {
@@ -304,8 +176,8 @@ input[type='range']::-moz-range-thumb {
   border-radius: 9999px;
   background: #ff4655;
   cursor: pointer;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 8px rgba(255, 70, 85, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 8px rgba(255, 70, 85, 0.45);
 }
 
 /* --- Hit / miss feedback animations --- */
@@ -336,7 +208,7 @@ input[type='range']::-moz-range-thumb {
   animation: floatup 0.65s ease-out forwards;
 }
 
-/* --- Wind streaks (Jett-style), flowing right → left & slightly up --- */
+/* --- Wind streaks (Jett-style) --- */
 @keyframes wind-streak {
   0% {
     transform: translateX(65vw) scaleX(0.5);
@@ -367,13 +239,4 @@ input[type='range']::-moz-range-thumb {
   filter: blur(0.4px);
   will-change: transform, opacity;
   animation: wind-streak linear infinite;
-}
-
-/* --- Glass panel shimmer pulse (used on key highlight cards) --- */
-@keyframes glass-pulse {
-  0%, 100% { opacity: 0.65; }
-  50%       { opacity: 0.85; }
-}
-.glass-pulse::before {
-  animation: glass-pulse 4s ease-in-out infinite;
 }

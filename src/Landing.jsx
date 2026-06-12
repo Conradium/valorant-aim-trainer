@@ -309,7 +309,7 @@ function Modal({ title, children, onClose }) {
       onClick={onClose}
     >
       <div
-        className="glass-card w-full max-w-md max-h-[80dvh] overflow-y-auto no-scrollbar rounded-[2rem]"
+        className="glass-card no-scrollbar w-full max-w-md max-h-[80dvh] overflow-y-auto rounded-[2rem]"
         style={{ padding: '1.75rem' }}
         onClick={(e) => e.stopPropagation()}
       >
