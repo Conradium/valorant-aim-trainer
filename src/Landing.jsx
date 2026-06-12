@@ -124,10 +124,10 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               <button
                 onClick={handleSave}
                 disabled={tempName.trim() === name || !tempName.trim()}
-                className={`w-full sm:w-auto rounded-2xl px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-[0_8px_16px_rgba(0,0,0,0.2)] transition-all ${
+                className={`w-full sm:w-auto rounded-2xl px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition-all ${
                   tempName.trim() === name || !tempName.trim()
-                    ? 'bg-white/5 border border-white/10 text-slate-400 cursor-not-allowed'
-                    : 'bg-gradient-to-br from-white/20 to-white/10 border border-white/30 backdrop-blur-lg shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] hover:from-white/30 hover:to-white/20 hover:scale-105 active:scale-95'
+                    ? 'opacity-40 cursor-not-allowed bg-white/5 border border-white/10 text-slate-400'
+                    : 'glass-btn'
                 }`}
               >
                 {t.save}
@@ -179,8 +179,8 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
                 return (
                   <li
                     key={i}
-                    className={`flex items-center gap-3 rounded-2xl px-4 py-3 border transition-all ${
-                      isYou ? 'bg-gradient-to-r from-white/20 to-white/10 border-white/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_12px_rgba(0,0,0,0.2)]' : 'bg-black/20 border-white/5'
+                    className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${
+                      isYou ? 'glass-card glass-pulse' : 'glass'
                     }`}
                   >
                     <span className="w-7 shrink-0 text-center text-sm font-black tabular-nums text-slate-400">
@@ -213,13 +213,13 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               href={CONTACT.donate}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-white/20 to-white/10 border border-white/30 backdrop-blur-lg px-4 py-3 text-sm font-bold text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_8px_16px_rgba(0,0,0,0.2)] transition-all hover:from-white/30 hover:to-white/20 hover:scale-105 active:scale-95"
+              className="glass-btn flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-white"
             >
               {t.donate}
             </a>
             <a
               href={`mailto:${CONTACT.email}`}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-md px-4 py-3 text-sm font-bold text-slate-200 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] transition-all hover:from-white/15 hover:to-white/5 hover:scale-105 active:scale-95"
+              className="glass flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200"
             >
               {t.helloBtn}
             </a>
@@ -227,7 +227,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               href={CONTACT.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-md px-4 py-3 text-sm font-bold text-slate-200 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] transition-all hover:from-white/15 hover:to-white/5 hover:scale-105 active:scale-95"
+              className="glass flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200"
             >
               {t.github}
             </a>
@@ -242,7 +242,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
           </p>
           <button
             onClick={() => setShowMobileModal(false)}
-            className="w-full rounded-2xl bg-gradient-to-br from-white/20 to-white/10 border border-white/30 backdrop-blur-lg py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_8px_16px_rgba(0,0,0,0.2)] transition-all hover:from-white/30 hover:to-white/20 hover:scale-105 active:scale-95"
+            className="glass-btn w-full rounded-2xl py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-white"
           >
             {t.gotIt}
           </button>
@@ -305,18 +305,19 @@ function MenuItem({ label, onClick }) {
 function Modal({ title, children, onClose }) {
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 transition-all"
+      className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-all"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md max-h-[80dvh] overflow-y-auto no-scrollbar rounded-[1.5rem] md:rounded-[2rem] border border-white/20 bg-gradient-to-br from-white/10 to-white/5 p-5 md:p-7 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_32px_0_rgba(0,0,0,0.4)] backdrop-blur-2xl backdrop-saturate-200"
+        className="glass-card w-full max-w-md max-h-[80dvh] overflow-y-auto no-scrollbar rounded-[2rem]"
+        style={{ padding: '1.75rem' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-black uppercase tracking-widest text-val-red">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded px-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
+            className="glass-btn rounded-full w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white text-sm"
           >
             ✕
           </button>
@@ -329,7 +330,7 @@ function Modal({ title, children, onClose }) {
 
 function Stat({ label, value, accent }) {
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 backdrop-blur-lg p-3 text-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+    <div className="glass rounded-2xl p-3 text-center">
       <p className="text-[9px] uppercase tracking-widest text-slate-400">{label}</p>
       <p className={`text-lg font-black tabular-nums ${accent ? 'text-val-accent' : 'text-white'}`}>
         {value}
