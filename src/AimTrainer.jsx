@@ -164,6 +164,9 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
   // Tracks pending popup timeouts so we can cancel them on unmount and avoid
   // "can't perform a React state update on an unmounted component" warnings.
   const popupTimeouts = useRef([]);
+  // DOM refs for effects written directly from the rAF loop (zero re-render overhead)
+  const vigRef   = useRef(null); // vignette overlay element
+  const bloomRef = useRef(0);   // current bloom amount (passed to Crosshair via ref)
 
   const shots = hits + misses;
   const accuracy = shots > 0 ? (hits / shots) * 100 : 0;
@@ -352,19 +355,33 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     let camRecoilPitch = 0;
     let camRecoilYaw = 0;
     let muzzleTimer = 0;
+    // Crosshair bloom — gap in px, applied on top of the base gap in the React layer
+    let xhairBloom = 0;
+    // Vignette flash state — driven by animloop, written to a DOM ref directly
+    let vigTimer = 0; // seconds remaining for flash
+    let vigType = 'fire'; // 'fire' | 'hit'
     const dyingTargets = [];
 
     function fireViewmodel() {
-      vmRecoilZ = 0.15; // sharp back
-      vmRecoilRotX = 0.12; // sharp pitch up
-      vmRecoilRotZ = (Math.random() - 0.5) * 0.15; // twist
+      // Viewmodel kick
+      vmRecoilZ    = 0.14;
+      vmRecoilRotX = 0.11;
+      vmRecoilRotZ = (Math.random() - 0.5) * 0.14;
 
-      camRecoilPitch += 0.012; // screen kick up
-      camRecoilYaw += (Math.random() - 0.5) * 0.006; // screen side kick
+      // Camera snap — sharper pitch up, slight random yaw
+      camRecoilPitch += 0.018; // ~1° screen kick up (Valorant-tuned)
+      camRecoilYaw   += (Math.random() - 0.5) * 0.007;
+
+      // Crosshair bloom — expands immediately, spring-recovers in animate()
+      xhairBloom = 9;
+
+      // Vignette flash — white rim pulse
+      vigType  = 'fire';
+      vigTimer = 0.08; // 80ms
 
       muzzleTimer = 0.05;
       muzzle.visible = true;
-      muzzle.rotation.z = Math.random() * Math.PI; // vary the flash shape
+      muzzle.rotation.z = Math.random() * Math.PI;
       muzzleLight.intensity = 2.5;
     }
 
@@ -562,6 +579,9 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         respawn();
       } else {
         engine.current.onMiss();
+        // Miss: brief red vignette edge flash
+        vigType  = 'miss';
+        vigTimer = 0.12;
       }
     }
 
@@ -676,16 +696,16 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         }
       }
 
-      // --- Camera shake recovery ---
-      camRecoilPitch += (0 - camRecoilPitch) * Math.min(1, dt * 15);
-      camRecoilYaw += (0 - camRecoilYaw) * Math.min(1, dt * 15);
+      // --- Camera recoil recovery (slower spring = weightier feel) ---
+      camRecoilPitch += (0 - camRecoilPitch) * Math.min(1, dt * 11);
+      camRecoilYaw   += (0 - camRecoilYaw)   * Math.min(1, dt * 11);
       camera.rotation.set(pitch + camRecoilPitch, yaw + camRecoilYaw, 0);
 
-      // --- Viewmodel recoil & muzzle flash (frame-rate independent) ---
-      vmRecoilZ += (0 - vmRecoilZ) * Math.min(1, dt * 12);
+      // --- Viewmodel recoil & muzzle flash ---
+      vmRecoilZ    += (0 - vmRecoilZ)    * Math.min(1, dt * 12);
       vmRecoilRotX += (0 - vmRecoilRotX) * Math.min(1, dt * 12);
       vmRecoilRotZ += (0 - vmRecoilRotZ) * Math.min(1, dt * 12);
-      
+
       weapon.position.z = VM_BASE.z + vmRecoilZ;
       weapon.rotation.x = VM_BASE.rx - vmRecoilRotX;
       weapon.rotation.z = VM_BASE.rz + vmRecoilRotZ;
@@ -696,6 +716,24 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
           muzzle.visible = false;
           muzzleLight.intensity = 0;
         }
+      }
+
+      // --- Crosshair bloom recovery ---
+      xhairBloom += (0 - xhairBloom) * Math.min(1, dt * 16); // snappy spring
+      if (Math.abs(xhairBloom) < 0.05) xhairBloom = 0;
+      engine.current.onBloom(xhairBloom);
+
+      // --- Vignette flash (white on fire, red on miss, green on hit) ---
+      if (vigTimer > 0) {
+        vigTimer -= dt;
+        const t = Math.max(0, vigTimer / 0.08);
+        const opacity = t * (vigType === 'fire' ? 0.22 : vigType === 'hit' ? 0.28 : 0.20);
+        const color   = vigType === 'fire' ? '255,255,255'
+                      : vigType === 'hit'  ? '0,229,192'
+                      :                      '255,70,85';
+        engine.current.onVig(opacity, color);
+      } else {
+        engine.current.onVig(0, '0,0,0');
       }
 
       renderer.render(scene, camera);
@@ -725,21 +763,19 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       },
       resize: onResize,
       resetView: () => {
-        yaw = 0;
-        pitch = 0;
+        yaw = 0; pitch = 0;
         camera.rotation.set(0, 0, 0);
         camera.position.set(0, 0, 0);
-        strafeVel = 0;
-        moveLeft = false;
-        moveRight = false;
-        lastMoving = false;
+        strafeVel = 0; moveLeft = false; moveRight = false; lastMoving = false;
       },
-      // Filled in below via the binding effect so they always hit fresh setState.
-      onHit: () => {},
-      onMiss: () => {},
-      setLocked: () => {},
-      onFps: () => {},
-      onMoveState: () => {},
+      onHit:      () => {},
+      onMiss:     () => {},
+      setLocked:  () => {},
+      onFps:      () => {},
+      onMoveState:() => {},
+      // New: bloom & vignette driven by the rAF loop, NOT React state
+      onBloom:    () => {},
+      onVig:      () => {},
     };
 
     return () => {
@@ -766,6 +802,11 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     if (!engine.current) return;
     engine.current.onHit = (reactionMs) => {
       hitSound();
+      // Hit: green vignette reward flash — trigger directly via vigRef bypass
+      if (vigRef.current) {
+        vigRef.current.style.opacity = 0.28;
+        vigRef.current.style.boxShadow = 'inset 0 0 120px 40px rgba(0,229,192,0.28)';
+      }
       const now = performance.now();
       const s = splitRef.current;
       let pts = 100; // base reward
@@ -798,12 +839,22 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       setMisses((m) => m + 1);
       addPopup('MISS', '#ff4655');
     };
-    engine.current.setLocked = (locked) => {
+    engine.current.setLocked  = (locked) => {
       setIsLocked(locked);
-      if (!locked) setIsMoving(false); // clear the moving indicator while paused
+      if (!locked) setIsMoving(false);
     };
-    engine.current.onFps = (v) => setFps(v);
-    engine.current.onMoveState = (m) => setIsMoving(m);
+    engine.current.onFps      = (v) => setFps(v);
+    engine.current.onMoveState= (m) => setIsMoving(m);
+    // Bloom: write directly to a ref — Crosshair reads it on each render cycle
+    engine.current.onBloom    = (px) => { bloomRef.current = px; };
+    // Vignette: write directly to DOM style, zero React state
+    engine.current.onVig      = (opacity, color) => {
+      if (vigRef.current) {
+        vigRef.current.style.opacity = opacity;
+        vigRef.current.style.boxShadow =
+          `inset 0 0 120px 40px rgba(${color},${opacity})`;
+      }
+    };
   }, [hitSound, missSound, addPopup]);
 
   /* ------------------------------ Game control ------------------------------ */
@@ -1140,9 +1191,22 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
       <main className="relative flex-1">
         <div ref={mountRef} className="absolute inset-0" />
 
-        {/* Crosshair overlay — only while actively playing (not when paused) */}
+        {/* Vignette overlay — written to directly by the rAF loop, no React state */}
+        <div
+          ref={vigRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-10"
+          style={{ opacity: 0, transition: 'opacity 0.04s linear, box-shadow 0.04s linear' }}
+        />
+
+        {/* Crosshair overlay — only while actively playing */}
         {isRunning && isLocked && (
-          <Crosshair color={crosshairColor} size={crosshairSize} moving={isMoving} />
+          <Crosshair
+            color={crosshairColor}
+            size={crosshairSize}
+            moving={isMoving}
+            bloomRef={bloomRef}
+          />
         )}
 
         {/* Top-right controls: FPS meter + fullscreen toggle */}
@@ -1326,17 +1390,19 @@ function Slider({ label, value, min, max, step, onChange, display }) {
   );
 }
 
-function Crosshair({ color, size, moving }) {
+function Crosshair({ color, size, moving, bloomRef }) {
   const thickness = 2;
-  // While strafing the crosshair blooms open & turns red — your shots are
-  // inaccurate until you stop (Valorant-style movement error feedback).
-  const gap = moving ? 11 : 3;
+  // Bloom from shots (read from ref — no re-render needed, value set each rAF frame).
+  // Add on top of the movement gap so both effects compose correctly.
+  const bloom = bloomRef?.current ?? 0;
+  // While strafing crosshair blooms open & turns red (Valorant-style spread feedback).
+  const gap = (moving ? 11 : 3) + bloom;
   const c = moving ? '#ff4655' : color;
   const arm = {
     position: 'absolute',
     background: c,
     boxShadow: `0 0 2px ${c}`,
-    transition: 'all 0.06s linear',
+    transition: moving ? 'all 0.06s linear' : 'all 0.04s ease-out',
   };
   return (
     <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
