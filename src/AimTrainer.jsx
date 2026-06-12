@@ -640,6 +640,13 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     let fpsAccum = 0;
     function animate() {
       animId = requestAnimationFrame(animate);
+      // Guard: if cleanup already ran (engine.current = null), bail immediately.
+      // Without this, a stale rAF frame can fire after unmount and crash on
+      // engine.current.onBloom / onFps / onVig — all of which are null-accessed.
+      if (!engine.current) {
+        cancelAnimationFrame(animId);
+        return;
+      }
       const now = performance.now();
       const dt = Math.min((now - lastFrame) / 1000, 0.05); // clamp huge tab-switch gaps
       lastFrame = now;
