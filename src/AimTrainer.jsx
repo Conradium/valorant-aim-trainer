@@ -968,7 +968,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
     >
       {/* ============================ SIDEBAR ============================ */}
       {!isFullscreen && (!isRunning || !isLocked) && (
-      <aside className="no-scrollbar flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto p-6 glass-panel">
+      <aside className="no-scrollbar flex h-full w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-white/10 bg-[#141d24] p-6">
         <header className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
             <img
@@ -999,7 +999,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
           <button
             onClick={() => setModeOpen((o) => !o)}
             disabled={isLocked}
-            className="glass-btn flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <span>
               <span className="block text-[10px] uppercase tracking-widest text-slate-400">
@@ -1010,7 +1010,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
             <span className="text-xs text-slate-400">{modeOpen ? '▲' : '▼'}</span>
           </button>
           {modeOpen && !isLocked && (
-            <div className="absolute z-40 mt-2 w-full overflow-hidden rounded-2xl glass shadow-2xl">
+            <div className="absolute z-40 mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0f1922] shadow-xl">
               {MODE_ORDER.map((key) => (
                 <button
                   key={key}
@@ -1034,7 +1034,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         </div>
 
         {/* Timer */}
-        <div className="glass rounded-2xl p-4 text-center">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
           <p className="text-[10px] uppercase tracking-widest text-slate-400">
             {t.timeRemaining}
           </p>
@@ -1066,20 +1066,20 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
           <button
             onClick={startPractice}
             disabled={isRunning}
-            className="flex-1 glass-btn rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:hover:transform-none"
+            className="flex-1 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
           >
             {isRunning ? t.running : t.startBtn.replace('▶ ', '')}
           </button>
           <button
             onClick={reset}
-            className="glass rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider text-slate-200"
+            className="rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-bold uppercase tracking-wider text-slate-300 transition-colors hover:bg-white/5"
           >
             {t.reset}
           </button>
         </div>
 
         {/* Settings panel */}
-        <div className="mt-2 space-y-5 rounded-3xl glass p-5">
+        <div className="mt-2 space-y-5 rounded-3xl border border-white/8 bg-white/[0.03] p-5">
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-400">
             {t.settings}
           </p>
@@ -1217,7 +1217,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
                   </p>
                   <button
                     onClick={startPractice}
-                    className="mt-6 glass-btn rounded-3xl px-8 py-3.5 text-sm font-bold uppercase tracking-wider text-white"
+                    className="mt-6 rounded-3xl border border-white/20 bg-white/10 px-8 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
                   >
                     {t.startBtn}
                   </button>
@@ -1250,8 +1250,8 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
 
       {/* Confirm switching mode mid-round — it restarts the timer & score */}
       {pendingMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all">
-          <div className="glass-card w-80 rounded-[2rem] p-7 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-80 rounded-[2rem] border border-white/10 bg-[#141d24] p-7 text-center shadow-2xl">
             <p className="text-lg font-black uppercase tracking-widest text-val-red">
               {t.changeModeTitle}
             </p>
@@ -1268,13 +1268,13 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
             <div className="mt-5 flex gap-2">
               <button
                 onClick={confirmModeChange}
-                className="flex-1 glass-btn rounded-2xl px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white"
+                className="flex-1 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
               >
                 {t.changeModeConfirm}
               </button>
               <button
                 onClick={() => setPendingMode(null)}
-                className="flex-1 glass rounded-2xl px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-slate-200"
+                className="flex-1 rounded-2xl border border-white/10 bg-transparent px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-slate-300 transition-colors hover:bg-white/5"
               >
                 {t.cancel}
               </button>
@@ -1297,7 +1297,7 @@ function Stat({ label, value, accent, good, bad, wide }) {
     ? 'text-val-red'
     : 'text-white';
   return (
-    <div className={`glass rounded-2xl p-3 ${wide ? 'col-span-2' : ''}`}>
+    <div className={`rounded-2xl border border-white/10 bg-white/5 p-3 ${wide ? 'col-span-2' : ''}`}>
       <p className="text-[10px] uppercase tracking-widest text-slate-400">
         {label}
       </p>
@@ -1365,7 +1365,7 @@ function Crosshair({ color, size, moving }) {
 
 function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t, splitLabel, onAgain }) {
   return (
-    <div className="glass-card w-[22rem] rounded-[2rem] p-7">
+    <div className="w-[22rem] rounded-[2rem] border border-white/10 bg-[#141d24] p-7 shadow-2xl">
       <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
         {t.sessionComplete}
       </p>
@@ -1388,7 +1388,7 @@ function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t
       </div>
       <button
         onClick={onAgain}
-        className="mt-6 w-full glass-btn rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider text-white"
+        className="mt-6 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
       >
         {t.playAgain}
       </button>
@@ -1417,7 +1417,7 @@ function HitMarker({ color }) {
 
 function SummaryRow({ label, value }) {
   return (
-    <div className="glass rounded-2xl px-4 py-3">
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
       <p className="text-[10px] uppercase tracking-widest text-slate-400">
         {label}
       </p>

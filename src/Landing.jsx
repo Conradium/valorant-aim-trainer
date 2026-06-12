@@ -127,7 +127,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
                 className={`w-full sm:w-auto rounded-2xl px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition-all ${
                   tempName.trim() === name || !tempName.trim()
                     ? 'opacity-40 cursor-not-allowed bg-white/5 border border-white/10 text-slate-400'
-                    : 'glass-btn'
+                    : 'border border-white/20 bg-white/10 hover:bg-white/15 hover:scale-105 active:scale-95'
                 }`}
               >
                 {t.save}
@@ -180,7 +180,9 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
                   <li
                     key={i}
                     className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${
-                      isYou ? 'glass-card glass-pulse' : 'glass'
+                      isYou
+                        ? 'border border-val-accent/30 bg-val-accent/10'
+                        : 'border border-white/8 bg-white/5'
                     }`}
                   >
                     <span className="w-7 shrink-0 text-center text-sm font-black tabular-nums text-slate-400">
@@ -213,13 +215,13 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               href={CONTACT.donate}
               target="_blank"
               rel="noopener noreferrer"
-              className="glass-btn flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-white"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
             >
               {t.donate}
             </a>
             <a
               href={`mailto:${CONTACT.email}`}
-              className="glass flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-bold text-slate-300 transition-colors hover:bg-white/5"
             >
               {t.helloBtn}
             </a>
@@ -227,7 +229,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               href={CONTACT.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="glass flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-slate-200"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-bold text-slate-300 transition-colors hover:bg-white/5"
             >
               {t.github}
             </a>
@@ -242,7 +244,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
           </p>
           <button
             onClick={() => setShowMobileModal(false)}
-            className="glass-btn w-full rounded-2xl py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-white"
+            className="w-full rounded-2xl border border-white/20 bg-white/10 py-3 text-xs md:text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
           >
             {t.gotIt}
           </button>
@@ -304,33 +306,32 @@ function MenuItem({ label, onClick }) {
 
 function Modal({ title, children, onClose }) {
   return (
-    <div
-      className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-all"
-      onClick={onClose}
-    >
       <div
-        className="glass-card no-scrollbar w-full max-w-md max-h-[80dvh] overflow-y-auto rounded-[2rem]"
-        style={{ padding: '1.75rem' }}
-        onClick={(e) => e.stopPropagation()}
+        className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+        onClick={onClose}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-black uppercase tracking-widest text-val-red">{title}</h2>
-          <button
-            onClick={onClose}
-            className="glass-btn rounded-full w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white text-sm"
-          >
-            ✕
-          </button>
+        <div
+          className="no-scrollbar w-full max-w-md max-h-[80dvh] overflow-y-auto rounded-[2rem] border border-white/10 bg-[#141d24] p-7 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-black uppercase tracking-widest text-val-red">{title}</h2>
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white text-sm"
+            >
+              ✕
+            </button>
+          </div>
+          {children}
         </div>
-        {children}
       </div>
-    </div>
   );
 }
 
 function Stat({ label, value, accent }) {
   return (
-    <div className="glass rounded-2xl p-3 text-center">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-center">
       <p className="text-[9px] uppercase tracking-widest text-slate-400">{label}</p>
       <p className={`text-lg font-black tabular-nums ${accent ? 'text-val-accent' : 'text-white'}`}>
         {value}
