@@ -76,6 +76,95 @@ function validateGameStats({ score, accuracy, split }) {
   return { ok: true, values: { score: Math.round(s), accuracy: a, split: sp } };
 }
 
+// --- Server-authoritative score verification -------------------------------
+// The client sends a per-hit gameplay log; the server re-derives the score from
+// it and rejects logs whose timing is physically impossible for a human. This
+// closes the "POST any score up to the ceiling" hole: a forged score now has to
+// come with a forged log that still obeys human limits, which bounds how high a
+// cheater can plausibly go. (It does NOT prove a human actually played — that is
+// impossible for client-rendered games — but it removes trivial value-forgery.)
+//
+// Scoring formula MUST mirror the client (AimTrainer.jsx onHit):
+//   pts = 100 + round(max(0, 600 - bonusInterval) / 3)   // bonusInterval null => +100 only
+const HIT_BASE_POINTS = 100;
+const HIT_BONUS_REF_MS = 600;     // intervals at/above this earn no bonus
+const HIT_BONUS_DIVISOR = 3;      // => max bonus 200, max 300 pts/hit
+const SCORE_TOLERANCE = 2;        // allow tiny rounding drift between client & server
+const MAX_SHOTS = 3000;           // generous payload ceiling (hits + misses)
+const HARD_FLOOR_MS = 20;         // a single sub-20ms interval is a double-register/bot
+const MAX_SUBFLOOR_HITS = 2;      // tolerate a couple of engine double-registers
+const SUSTAINED_FLOOR_MS = 70;    // median interval below this = superhuman cadence
+                                  // (real human medians are ~150ms+; tune up to
+                                  // tighten the cheat ceiling, down to loosen)
+const SUSTAINED_MIN_HITS = 10;    // only apply the median gate once there's enough data
+
+function ptsForInterval(b) {
+  // b is the bonus interval in ms, or null for the first hit (no prior split).
+  if (b == null) return HIT_BASE_POINTS;
+  return HIT_BASE_POINTS + Math.round(Math.max(0, HIT_BONUS_REF_MS - b) / HIT_BONUS_DIVISOR);
+}
+
+/**
+ * Re-derives the score from a gameplay log and validates its plausibility.
+ * @param {*} log   { mode, durationMs, hits: [{t, b}], misses }
+ * @param {number} claimedScore  the score the client reported (cross-checked)
+ * @returns {{ok:true, score:number, accuracy:number, split:number}
+ *          | {ok:false, error:string}}
+ */
+function verifyGameLog(log, claimedScore) {
+  if (!log || typeof log !== 'object') return { ok: false, error: 'Missing gameplay log' };
+  const hits = log.hits;
+  const misses = Number(log.misses);
+  if (!Array.isArray(hits)) return { ok: false, error: 'Malformed gameplay log: hits' };
+  if (!Number.isInteger(misses) || misses < 0) return { ok: false, error: 'Malformed gameplay log: misses' };
+  if (hits.length + misses > MAX_SHOTS) return { ok: false, error: 'Gameplay log too large' };
+
+  let score = 0;
+  let lastT = -1;
+  let subFloor = 0;
+  let bonusSum = 0;
+  let bonusCount = 0;
+  const intervals = [];
+
+  for (const h of hits) {
+    if (!h || typeof h !== 'object') return { ok: false, error: 'Malformed hit entry' };
+    const t = Number(h.t);
+    if (!Number.isFinite(t) || t < 0) return { ok: false, error: 'Invalid hit timestamp' };
+    if (t < lastT) return { ok: false, error: 'Hit timestamps not in order' };
+    lastT = t;
+
+    const b = h.b == null ? null : Number(h.b);
+    if (b != null) {
+      if (!Number.isFinite(b) || b < 0) return { ok: false, error: 'Invalid hit interval' };
+      if (b < HARD_FLOOR_MS) subFloor += 1;
+      intervals.push(b);
+      bonusSum += b;
+      bonusCount += 1;
+    }
+    score += ptsForInterval(b);
+  }
+
+  // Plausibility gates — reject only the physically impossible.
+  if (subFloor > MAX_SUBFLOOR_HITS) {
+    return { ok: false, error: 'Implausible hit timing' };
+  }
+  if (intervals.length >= SUSTAINED_MIN_HITS) {
+    const sorted = intervals.slice().sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    if (median < SUSTAINED_FLOOR_MS) return { ok: false, error: 'Implausible hit cadence' };
+  }
+
+  // The re-derived score is authoritative; a mismatch means a tampered client.
+  if (Number.isFinite(Number(claimedScore)) && Math.abs(score - Number(claimedScore)) > SCORE_TOLERANCE) {
+    return { ok: false, error: 'Score does not match gameplay log' };
+  }
+
+  const shots = hits.length + misses;
+  const accuracy = shots > 0 ? (hits.length / shots) * 100 : 0;
+  const split = bonusCount > 0 ? bonusSum / bonusCount : 0;
+  return { ok: true, score, accuracy, split };
+}
+
 /**
  * Per-request rate limiting for write endpoints, keyed by both client IP and
  * deviceId so neither a single device nor a single IP can flood the scores table.
@@ -357,7 +446,7 @@ export default {
     if (path === "/api/score" && request.method === "POST") {
       try {
         const body = await request.json();
-        const { deviceId, name, score, accuracy, split, token } = body;
+        const { deviceId, name, score, accuracy, split, log, token } = body;
 
         if (!deviceId || !name || score == null) {
           return new Response(
@@ -376,6 +465,16 @@ export default {
         if (!stats.ok) {
           return new Response(
             JSON.stringify({ success: false, error: stats.error }),
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+
+        // Re-derive the score from the gameplay log (server-authoritative).
+        // The recomputed values — not the client's claimed ones — are stored.
+        const verified = verifyGameLog(log, score);
+        if (!verified.ok) {
+          return new Response(
+            JSON.stringify({ success: false, error: verified.error }),
             { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
           );
         }
@@ -425,9 +524,9 @@ export default {
         ).bind(
           deviceId,
           sanitizeName(name),
-          stats.values.score,
-          stats.values.accuracy,
-          stats.values.split,
+          verified.score,
+          verified.accuracy,
+          verified.split,
           new Date().toISOString()
         ).run();
 

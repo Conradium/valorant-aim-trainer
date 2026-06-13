@@ -134,6 +134,7 @@ export async function submitScore(deviceId, name, session, token) {
         score: session.score,
         accuracy: session.accuracy,
         split: session.split,
+        log: session.log,
         token,
       }),
     });

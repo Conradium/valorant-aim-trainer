@@ -163,6 +163,10 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
   const [hitKey, setHitKey] = useState(0); // bumped each hit to replay the hitmarker
   const [newHigh, setNewHigh] = useState(false);
   const splitRef = useRef({ sum: 0, count: 0, last: 0 });
+  // Per-round gameplay log sent to the backend so the server can re-derive the
+  // score from the actual hit timing (server-authoritative anti-cheat). Each hit
+  // records { t: ms since round start, b: bonus interval ms used for scoring }.
+  const eventLogRef = useRef({ hits: [], misses: 0, startedAt: 0 });
   const popupSeq = useRef(0);
   // Tracks pending popup timeouts so we can cancel them on unmount and avoid
   // "can't perform a React state update on an unmounted component" warnings.
@@ -499,19 +503,30 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
       m.userData.radius = r;       // used by spawn-overlap math below
       hitRadii.set(m, r);          // authoritative radius for hit detection (tamper-proof)
 
-      // Disc distribution within the mode's spread. Reject positions that
+      // The spawn area scales with target size so bigger balls actually spread
+      // out instead of staying crammed into the same fixed disc (the spread is
+      // tuned for the default 0.28 size). Clamped so even max-size targets stay
+      // within the ~±10 (x) / ~±5.6 (y) visible region at the target plane.
+      const sizeRatio = cfgRef.current.targetSize / 0.28;
+      const spreadX = Math.min(mode.spreadX * sizeRatio, 8.5);
+      const spreadY = Math.min(mode.spreadY * sizeRatio, 4.5);
+
+      // Disc distribution within the (size-scaled) spread. Reject positions that
       // overlap existing targets (2D check — all share the same Z plane).
-      const gap = 0.14; // breathing room between balls (world units)
+      // Breathing room between balls also scales with their size (GAP_FACTOR of
+      // the combined radii). 0.25 reproduces the original 0.14 gap at default size.
+      const GAP_FACTOR = 0.25;
       let best = { x: 0, y: mode.centerY };
       let bestClearance = -Infinity;
       for (let attempt = 0; attempt < 30; attempt++) {
         const ang = Math.random() * Math.PI * 2;
         const rad = Math.sqrt(Math.random()); // 0..1, even disc distribution
-        const x = Math.cos(ang) * rad * mode.spreadX;
-        let y = mode.centerY + Math.sin(ang) * rad * mode.spreadY;
+        const x = Math.cos(ang) * rad * spreadX;
+        let y = mode.centerY + Math.sin(ang) * rad * spreadY;
         y = Math.max(y, FLOOR_Y + r + 0.15); // keep clear of the floor
         let clearance = Infinity;
         for (const o of targets) {
+          const gap = (r + o.userData.radius) * GAP_FACTOR; // scales with ball size
           const d =
             Math.hypot(x - o.position.x, y - o.position.y) -
             (r + o.userData.radius + gap);
@@ -630,7 +645,14 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
     }
 
     function onMouseDown() {
-      if (!runningRef.current || document.pointerLockElement !== canvas) return;
+      if (!runningRef.current) return;
+      // Paused (e.g. after Esc): treat the press itself as a resume request so
+      // re-locking happens on mousedown rather than waiting for the click event.
+      // This press must NOT also fire a shot.
+      if (document.pointerLockElement !== canvas) {
+        requestLock();
+        return;
+      }
       fireViewmodel(); // recoil + muzzle flash on every shot
       // Counter-Strafe: firing while moving scatters the shot away from the
       // crosshair (accurate only once you've stopped).
@@ -714,14 +736,23 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
 
     function requestLock() {
       // Re-lock when the user clicks the canvas mid-session (e.g. after Esc).
-      if (runningRef.current && document.pointerLockElement !== canvas) {
+      // Browsers enforce a short (~1.3s) cooldown after Esc before re-locking is
+      // allowed, so a click during that window is ignored — the next click then
+      // succeeds. All failures are swallowed so they never surface as unhandled
+      // promise rejections (which previously made resume feel stuck).
+      if (!runningRef.current || document.pointerLockElement === canvas) return;
+      const plainLock = () => {
         try {
-          // Request raw mouse input (bypasses OS acceleration) for true 1:1 aim
-          const promise = canvas.requestPointerLock({ unadjustedMovement: true });
-          if (promise) promise.catch(() => canvas.requestPointerLock());
-        } catch (e) {
-          canvas.requestPointerLock();
-        }
+          const p = canvas.requestPointerLock();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } catch { /* ignore — user can click again after the cooldown */ }
+      };
+      try {
+        // Request raw mouse input (bypasses OS acceleration) for true 1:1 aim.
+        const promise = canvas.requestPointerLock({ unadjustedMovement: true });
+        if (promise && typeof promise.catch === 'function') promise.catch(plainLock);
+      } catch {
+        plainLock();
       }
     }
 
@@ -961,6 +992,10 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
       const now = performance.now();
       const s = splitRef.current;
       let pts = 100; // base reward
+      // `bonusInterval` is the timing value that drives the bonus (reaction for
+      // Reflex Pop, split between hits otherwise). It's logged so the server can
+      // recompute pts itself and reject timing that's physically impossible.
+      let bonusInterval = null;
       if (cfgRef.current.mode.reflex) {
         // (#2) Reflex Pop: the meaningful metric is pure reaction (spawn→hit),
         // NOT the gap between hits (which would include the random spawn delay).
@@ -968,6 +1003,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
           s.sum += reactionMs;
           s.count += 1;
           setAvgRt(s.sum / s.count);
+          bonusInterval = reactionMs;
           pts += Math.round(Math.max(0, 600 - reactionMs) / 3);
         }
       } else if (s.last) {
@@ -976,10 +1012,15 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
         s.sum += split;
         s.count += 1;
         setAvgRt(s.sum / s.count);
+        bonusInterval = split;
         // Bonus scales with how fast the split was (faster = more points).
         pts += Math.round(Math.max(0, 600 - split) / 3);
       }
       s.last = now;
+      eventLogRef.current.hits.push({
+        t: Math.round(now - eventLogRef.current.startedAt),
+        b: bonusInterval == null ? null : Math.round(bonusInterval),
+      });
       setHits((h) => h + 1);
       setScore((v) => v + pts);
       addPopup(`+${pts}`, '#00e5c0'); // (#3) feedback
@@ -987,6 +1028,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
     };
     engine.current.onMiss = () => {
       missSound();
+      eventLogRef.current.misses += 1;
       setMisses((m) => m + 1);
       addPopup('MISS', '#ff4655');
     };
@@ -1022,6 +1064,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
     if (!engine.current) return;
     // Reset stats.
     splitRef.current = { sum: 0, count: 0, last: 0 };
+    eventLogRef.current = { hits: [], misses: 0, startedAt: performance.now() };
     setScore(0);
     setHits(0);
     setMisses(0);
@@ -1130,7 +1173,21 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
       split: avgRt > 0 ? (prev.split ? Math.min(prev.split, avgRt) : avgRt) : prev.split,
     }));
     // Log this session to the weekly leaderboard (skip empty/idle sessions).
-    if (score > 0) onSession?.({ score, accuracy, split: avgRt });
+    // Include the gameplay log so the backend can re-derive and verify the score.
+    if (score > 0) {
+      const ev = eventLogRef.current;
+      onSession?.({
+        score,
+        accuracy,
+        split: avgRt,
+        log: {
+          mode: modeKey,
+          durationMs: Math.round(performance.now() - ev.startedAt),
+          hits: ev.hits,
+          misses: ev.misses,
+        },
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, hasPlayed]);
 
@@ -1473,10 +1530,10 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
           </div>
         )}
 
-        {/* Click-to-resume hint when running but pointer not locked */}
+        {/* Click-to-resume hint when running but pointer not locked (e.g. after Esc) */}
         {isRunning && !isLocked && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <p className="rounded-full border border-white/20 bg-black/50 px-5 py-2.5 text-sm font-bold uppercase tracking-widest text-white shadow-lg">
+            <p className="animate-pulse rounded-full border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-bold uppercase tracking-widest text-white shadow-lg">
               {t.resume}
             </p>
           </div>
