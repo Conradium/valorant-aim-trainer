@@ -26,6 +26,7 @@ input[type='range'] {
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.10);
   outline: none;
+  cursor: pointer;
 }
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -41,6 +42,14 @@ input[type='range']::-webkit-slider-thumb {
 input[type='range']::-webkit-slider-thumb:hover {
   transform: scale(1.2);
 }
+/* Firefox: track must be styled separately; without this the input's
+   4px height makes the slider nearly unclickable in Firefox. */
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.10);
+  border: none;
+}
 input[type='range']::-moz-range-thumb {
   width: 14px;
   height: 14px;
@@ -48,6 +57,11 @@ input[type='range']::-moz-range-thumb {
   background: #ff4655;
   cursor: pointer;
   border: 2px solid #0f1419;
+  transition: transform 0.1s ease;
+  box-sizing: border-box;
+}
+input[type='range']::-moz-range-thumb:hover {
+  transform: scale(1.2);
 }
 
 /* --- Hit / miss feedback animations --- */
