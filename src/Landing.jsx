@@ -480,12 +480,13 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               ↻ {t.leaderboardRetry}
             </button>
           </div>
+          <div className="h-[55vh] overflow-y-auto no-scrollbar">
           {board === null ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex h-full items-center justify-center">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-[#00e5c0]" />
             </div>
           ) : boardError ? (
-            <div className="py-6 text-center">
+            <div className="flex h-full flex-col items-center justify-center text-center">
               <p className="mb-3 text-sm text-slate-400">{t.leaderboardError}</p>
               <button
                 onClick={loadLeaderboard}
@@ -495,10 +496,12 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               </button>
             </div>
           ) : board.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">{t.leaderboardEmpty}</p>
+            <div className="flex h-full items-center justify-center">
+              <p className="text-center text-sm text-slate-400">{t.leaderboardEmpty}</p>
+            </div>
           ) : (
             <>
-            <ol className="space-y-1.5">
+            <ol key={lbRange} className="animate-lb space-y-1.5">
               {board.map((row, i) => {
                 const isYou = row.deviceId === deviceId;
                 const medal = ['🥇', '🥈', '🥉'][i];
@@ -549,6 +552,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
             )}
             </>
           )}
+          </div>
         </Modal>
       )}
 

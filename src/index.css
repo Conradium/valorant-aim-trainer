@@ -82,6 +82,13 @@ input[type='range']::-moz-range-thumb:hover {
 }
 .animate-toast { animation: toast-in 0.2s ease-out forwards; }
 
+/* --- Leaderboard tab switch (weekly <-> all-time) --- */
+@keyframes lb-fade {
+  0%   { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0);   opacity: 1; }
+}
+.animate-lb { animation: lb-fade 0.28s ease-out; }
+
 /* --- Wind streaks (Jett-style) --- */
 @keyframes wind-streak {
   0%   { transform: translateX(65vw) scaleX(0.5); opacity: 0; }
