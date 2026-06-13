@@ -457,6 +457,15 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
     const targets = [];
     let reflexTimer = null; // pending delayed spawn for Reflex Pop mode
 
+    // Authoritative hit radius per target, kept in a closure-scoped WeakMap so it
+    // can't be reached or altered from the page (devtools, userscripts). Hit
+    // detection uses THESE radii via a manual ray–sphere test — never the mesh
+    // geometry or .scale — so visually inflating a target grants no larger
+    // hittable area. Anti-cheat for the "enlarge the target" trick.
+    const hitRadii = new WeakMap();
+    const _hitSphere = new THREE.Sphere();
+    const _hitPoint = new THREE.Vector3();
+
     // Geometry cache — reuse SphereGeometry instances by radius key instead of
     // allocating a new one per target. This eliminates repeated GC pressure on
     // every hit/spawn cycle (up to ~1200+ allocs per session in grid mode).
@@ -487,7 +496,8 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
         metalness: 0.05,
       });
       const m = new THREE.Mesh(geo, mat);
-      m.userData.radius = r;
+      m.userData.radius = r;       // used by spawn-overlap math below
+      hitRadii.set(m, r);          // authoritative radius for hit detection (tamper-proof)
 
       // Disc distribution within the mode's spread. Reject positions that
       // overlap existing targets (2D check — all share the same Z plane).
@@ -633,9 +643,21 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
         }
       }
       raycaster.setFromCamera(aimPt, camera);
-      const hits = raycaster.intersectObjects(targets, false);
-      if (hits.length > 0) {
-        const hitMesh = hits[0].object;
+      // Manual ray–sphere test against the authoritative (tamper-proof) radius
+      // instead of raycaster.intersectObjects(), which would test the mesh
+      // geometry/scale and therefore reward anyone who enlarges a target.
+      // Pick the nearest target the ray passes through.
+      let hitMesh = null;
+      let hitDistSq = Infinity;
+      for (const t of targets) {
+        if (t.userData.dying) continue;
+        _hitSphere.set(t.position, hitRadii.get(t) || t.userData.radius);
+        if (raycaster.ray.intersectSphere(_hitSphere, _hitPoint)) {
+          const d = raycaster.ray.origin.distanceToSquared(_hitPoint);
+          if (d < hitDistSq) { hitDistSq = d; hitMesh = t; }
+        }
+      }
+      if (hitMesh) {
         // True reaction = time from this target spawning to being hit.
         const reaction = performance.now() - (hitMesh.userData.spawnTime || performance.now());
         engine.current.onHit(reaction);
