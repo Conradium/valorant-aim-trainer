@@ -306,7 +306,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
                     className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${
                       isYou
                         ? 'border border-val-accent/30 bg-val-accent/10'
-                        : 'border border-white/8 bg-white/5'
+                        : 'bg-white/5'
                     }`}
                   >
                     <span className="w-7 shrink-0 text-center text-sm font-black tabular-nums text-slate-400">
