@@ -22,12 +22,76 @@ function isAllowedOrigin(origin) {
  * Although all queries use prepared statements (preventing SQL injection),
  * this adds a data-integrity layer and rejects obviously invalid inputs early.
  * Format: "dev-" followed by 10–60 alphanumeric/hyphen characters.
- *
- * TODO: For production-grade rate limiting, use Cloudflare KV or Durable Objects
- * to track request counts per deviceId and return 429 when thresholds are exceeded.
  */
 function isValidDeviceId(id) {
   return typeof id === 'string' && /^dev-[a-zA-Z0-9\-]{10,60}$/.test(id);
+}
+
+// --- Server-side validation bounds -----------------------------------------
+// A session is a fixed 60 s round (see SESSION_SECONDS in the client). Each hit
+// awards at most ~300 points, so even a flawless run lands far below MAX_SCORE.
+// These ceilings reject obviously forged payloads (e.g. score: 999999999) while
+// staying generous enough never to reject a legitimate elite run.
+const MAX_NAME_LEN = 20;
+const MAX_SCORE = 100000;   // generous ceiling; a real 60 s session caps well below this
+const MAX_ACCURACY = 100;   // accuracy is a percentage
+const MAX_SPLIT_MS = 60000; // a split/reaction can't exceed the 60 s session length
+
+/**
+ * Cleans a user-supplied display name before it is stored and later rendered on
+ * the leaderboard. Strips control characters and angle brackets (defence in depth
+ * against HTML/script injection), trims, and caps the length. Falls back to a
+ * default so a blank/whitespace name never reaches the database.
+ */
+function sanitizeName(name) {
+  const cleaned = String(name ?? '')
+    .replace(/[\u0000-\u001F\u007F<>]/g, '') // strip control chars + angle brackets
+    .trim()
+    .slice(0, MAX_NAME_LEN);
+  return cleaned || 'Agent';
+}
+
+/**
+ * Validates the numeric gameplay stats against plausible bounds. Unlike the old
+ * `Number(x) || 0` coercion (which silently accepted absurd values), this rejects
+ * non-finite numbers and anything outside the achievable range.
+ * @returns {{ ok: true, values: {score:number, accuracy:number, split:number} }
+ *          | { ok: false, error: string }}
+ */
+function validateGameStats({ score, accuracy, split }) {
+  const s = Number(score);
+  const a = Number(accuracy);
+  const sp = Number(split);
+
+  if (!Number.isFinite(s) || s < 0 || s > MAX_SCORE) {
+    return { ok: false, error: `Invalid score: must be a number between 0 and ${MAX_SCORE}` };
+  }
+  if (!Number.isFinite(a) || a < 0 || a > MAX_ACCURACY) {
+    return { ok: false, error: `Invalid accuracy: must be a number between 0 and ${MAX_ACCURACY}` };
+  }
+  if (!Number.isFinite(sp) || sp < 0 || sp > MAX_SPLIT_MS) {
+    return { ok: false, error: `Invalid split: must be a number between 0 and ${MAX_SPLIT_MS}` };
+  }
+
+  return { ok: true, values: { score: Math.round(s), accuracy: a, split: sp } };
+}
+
+/**
+ * Per-request rate limiting for write endpoints, keyed by both client IP and
+ * deviceId so neither a single device nor a single IP can flood the scores table.
+ * Uses Cloudflare's native rate-limiting binding (configured in wrangler.toml).
+ * Degrades gracefully — if the binding isn't present (e.g. local `wrangler dev`
+ * without it), requests are allowed through rather than failing closed.
+ * @returns {Promise<boolean>} true if the request is within limits.
+ */
+async function withinRateLimit(env, request, deviceId) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const checks = [];
+  if (env.RATE_LIMITER) checks.push(env.RATE_LIMITER.limit({ key: `dev:${deviceId}` }));
+  if (env.RATE_LIMITER_IP) checks.push(env.RATE_LIMITER_IP.limit({ key: `ip:${ip}` }));
+  if (checks.length === 0) return true; // bindings not configured (e.g. local dev)
+  const results = await Promise.all(checks);
+  return results.every((r) => r.success);
 }
 
 function corsFor(request) {
@@ -135,9 +199,23 @@ export default {
           );
         }
 
-        const score = Number(best.score) || 0;
-        const accuracy = Number(best.accuracy) || 0;
-        const split = Number(best.split) || 0;
+        const stats = validateGameStats(best);
+        if (!stats.ok) {
+          return new Response(
+            JSON.stringify({ success: false, error: stats.error }),
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+
+        if (!(await withinRateLimit(env, request, deviceId))) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Too many requests. Please slow down." }),
+            { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+
+        const cleanName = sanitizeName(name);
+        const { score, accuracy, split } = stats.values;
         const updatedAt = new Date().toISOString();
 
         // SQL Upsert statement
@@ -150,10 +228,10 @@ export default {
             accuracy = excluded.accuracy,
             split = excluded.split,
             updated_at = excluded.updated_at
-        `).bind(deviceId, name, score, accuracy, split, updatedAt).run();
+        `).bind(deviceId, cleanName, score, accuracy, split, updatedAt).run();
 
         const profileData = {
-          name,
+          name: cleanName,
           best: { score, accuracy, split },
           updatedAt
         };
@@ -189,14 +267,29 @@ export default {
           );
         }
 
+        const stats = validateGameStats({ score, accuracy, split });
+        if (!stats.ok) {
+          return new Response(
+            JSON.stringify({ success: false, error: stats.error }),
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+
+        if (!(await withinRateLimit(env, request, deviceId))) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Too many requests. Please slow down." }),
+            { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+
         await env.DB.prepare(
           "INSERT INTO scores (device_id, name, score, accuracy, split, created_at) VALUES (?, ?, ?, ?, ?, ?)"
         ).bind(
           deviceId,
-          String(name).slice(0, 20),
-          Math.round(Number(score)) || 0,
-          Number(accuracy) || 0,
-          Number(split) || 0,
+          sanitizeName(name),
+          stats.values.score,
+          stats.values.accuracy,
+          stats.values.split,
           new Date().toISOString()
         ).run();
 
