@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { TEXT } from './translations.js';
-import { fetchLeaderboard, fetchRank } from './api.js';
+import { fetchLeaderboard, fetchRank, fetchDonations } from './api.js';
 import { generateShareCard, CARD_TEMPLATES } from './shareCard.js';
 
 // Landing background (converted from PNG → WebP for a much smaller file).
@@ -21,6 +21,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
   const [boardError, setBoardError] = useState(false);
   const [lbRange, setLbRange] = useState('week'); // 'week' | 'all'
   const [myRankInfo, setMyRankInfo] = useState(null); // { rank, score } when outside top 10
+  const [donations, setDonations] = useState([]); // recent Saweria supporters
   // Share-card state: the generated PNG (as an object URL for preview) + its Blob
   // (for the Web Share API), and a flag while the canvas is rendering.
   const [shareUrl, setShareUrl] = useState(null);
@@ -222,6 +223,10 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
   // Release the preview object URL when the component unmounts.
   useEffect(() => () => { if (shareUrl) URL.revokeObjectURL(shareUrl); }, [shareUrl]);
 
+  // Recent supporters for the right-side card (empty array hides the card).
+  useEffect(() => { fetchDonations().then(setDonations); }, []);
+  const formatRp = (n) => `Rp${Number(n || 0).toLocaleString('id-ID')}`;
+
   return (
     <div className="relative h-[100dvh] w-screen overflow-hidden bg-val-dark font-sans text-white select-none">
 
@@ -307,6 +312,23 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
           onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
         />
       </nav>
+
+      {/* ---------- Supporters (right side, minimal) ---------- */}
+      {donations.length > 0 && (
+        <aside className="absolute right-6 md:right-12 top-1/2 z-10 hidden w-52 -translate-y-1/2 flex-col gap-2.5 border-l border-white/10 pl-4 md:flex">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">
+            ❤ {t.supporters}
+          </p>
+          <ul className="flex flex-col gap-2">
+            {donations.slice(0, 6).map((d, i) => (
+              <li key={i} className="flex items-center justify-between gap-2 text-xs">
+                <span className="truncate text-slate-200">{d.name}</span>
+                <span className="shrink-0 font-bold tabular-nums text-val-accent">{formatRp(d.amount)}</span>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
 
       {/* ---------- Footer ---------- */}
       <footer className="absolute bottom-4 left-6 right-6 md:left-8 md:right-auto z-10 text-[9px] md:text-[10px] tracking-widest text-slate-500 leading-normal">

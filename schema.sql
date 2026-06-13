@@ -27,3 +27,14 @@ CREATE TABLE IF NOT EXISTS used_sessions (
   nonce TEXT PRIMARY KEY,
   used_at TEXT NOT NULL
 );
+
+-- Saweria donations, received via webhook and shown on the landing "supporters"
+-- card. id is Saweria's transaction id (or a generated UUID) so retries dedupe.
+CREATE TABLE IF NOT EXISTS donations (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  amount INTEGER NOT NULL DEFAULT 0,
+  message TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_donations_created_at ON donations (created_at);

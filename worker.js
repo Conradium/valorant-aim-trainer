@@ -656,6 +656,72 @@ export default {
       }
     }
 
+    // POST /api/saweria-webhook?token=... — receives a donation from Saweria's
+    // webhook integration and stores it. Protected by a shared secret in the URL
+    // (DONATION_WEBHOOK_SECRET) since the endpoint is public. Inert until the
+    // secret is configured.
+    if (path === "/api/saweria-webhook" && request.method === "POST") {
+      if (!env.DONATION_WEBHOOK_SECRET) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Donations webhook is not configured" }),
+          { status: 503, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      const token = url.searchParams.get("token") || "";
+      if (!timingSafeEqual(token, env.DONATION_WEBHOOK_SECRET)) {
+        return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+          status: 401, headers: { "Content-Type": "application/json" },
+        });
+      }
+      try {
+        const body = await request.json();
+        const id = String(body.id || crypto.randomUUID()).slice(0, 80);
+        const name = sanitizeName(body.donator_name || body.name || "Anonim");
+        const amount = Math.max(0, Math.round(Number(body.amount_raw ?? body.amount ?? 0)) || 0);
+        const message = String(body.message || "")
+          .replace(/[\u0000-\u001F\u007F<>]/g, "").trim().slice(0, 140);
+        const createdAt = body.created_at ? String(body.created_at).slice(0, 40) : new Date().toISOString();
+
+        // INSERT OR IGNORE dedupes if Saweria retries the same transaction id.
+        await env.DB.prepare(
+          "INSERT OR IGNORE INTO donations (id, name, amount, message, created_at) VALUES (?, ?, ?, ?, ?)"
+        ).bind(id, name, amount, message, createdAt).run();
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        console.error("saweria webhook error:", err);
+        return new Response(JSON.stringify({ success: false, error: "Could not record donation" }), {
+          status: 500, headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // GET /api/donations — most recent donations for the landing supporters card.
+    if (path === "/api/donations" && request.method === "GET") {
+      try {
+        const { results } = await env.DB.prepare(
+          "SELECT name, amount, created_at FROM donations ORDER BY created_at DESC LIMIT 20"
+        ).all();
+        const data = (results || []).map((r) => ({
+          name: r.name,
+          amount: Number(r.amount) || 0,
+          createdAt: r.created_at,
+        }));
+        return new Response(
+          JSON.stringify({ success: true, data }),
+          { headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      } catch (err) {
+        console.error("donations error:", err);
+        return new Response(
+          JSON.stringify({ success: false, error: "Could not fetch donations" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    }
+
     return new Response("Not Found", { status: 404, headers: corsHeaders });
   }
 };

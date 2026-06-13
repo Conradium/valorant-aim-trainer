@@ -163,6 +163,23 @@ export async function fetchRank(deviceId) {
 }
 
 /**
+ * Fetches recent Saweria donations for the landing "supporters" card.
+ * Returns an array (possibly empty); never throws.
+ */
+export async function fetchDonations() {
+  try {
+    const res = await fetchWithTimeout(`${API_URL}/api/donations`);
+    if (res.ok) {
+      const json = await res.json();
+      return json.success ? json.data : [];
+    }
+  } catch (err) {
+    console.warn('[API] Could not fetch donations:', err.message);
+  }
+  return [];
+}
+
+/**
  * Fetches the weekly top-10 leaderboard (scores achieved in the last 7 days).
  * Returns an array (possibly empty) or null on failure.
  */
