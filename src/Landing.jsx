@@ -445,10 +445,10 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
             <CreditRow label={t.madeBy} value="ediiloupatty" />
             <CreditRow
               label={t.model3d}
-              value="“1851 Colt Navy Revolver” — Steven Jurriaans (CC BY)"
+              value="“1851 Colt Navy Revolver” - Steven Jurriaans (CC BY)"
             />
             <CreditRow label={t.builtWith} value="React · Three.js · Tailwind CSS" />
-            <CreditRow label={t.inspiredBy} value="Valorant (Riot Games) — fan project" />
+            <CreditRow label={t.inspiredBy} value="Valorant (Riot Games) - fan project" />
           </div>
           <p className="mt-4 text-[11px] leading-relaxed text-slate-400">
             {t.creditsTip}

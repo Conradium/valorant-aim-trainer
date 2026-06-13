@@ -29,12 +29,12 @@ const MODES = {
   },
   wide: {
     name: 'Wide Flicks',
-    desc: 'One far-flung target at a time — big, fast angle snaps.',
+    desc: 'One far-flung target at a time - big, fast angle snaps.',
     count: 1, spreadX: 5.5, spreadY: 0.8, centerY: 0.2, sizeScale: 1.15, reflex: false,
   },
   reflex: {
     name: 'Reflex Pop',
-    desc: 'A single target pops at a random moment — destroy it ASAP.',
+    desc: 'A single target pops at a random moment - destroy it ASAP.',
     count: 1, spreadX: 4, spreadY: 0.7, centerY: 0.1, sizeScale: 1.2, reflex: true,
   },
   grid: {
@@ -49,7 +49,7 @@ const MODES = {
   },
   strafe: {
     name: 'Counter-Strafe',
-    desc: 'Strafe with A / D. Your shots scatter while moving — stop (counter-strafe) before you fire.',
+    desc: 'Strafe with A / D. Your shots scatter while moving - stop (counter-strafe) before you fire.',
     // spreadY 0 → all targets sit on one flat head-height line (no high/low).
     count: 3, spreadX: 2.6, spreadY: 0, centerY: 0.1, sizeScale: 1, reflex: false, counterStrafe: true,
   },
