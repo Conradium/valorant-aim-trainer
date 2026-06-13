@@ -490,7 +490,7 @@ function Modal({ title, children, onClose }) {
 
 function Stat({ label, value, accent }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-center">
+    <div className="rounded-2xl bg-white/5 p-3 text-center">
       <p className="text-[9px] uppercase tracking-widest text-slate-400">{label}</p>
       <p className={`text-lg font-black tabular-nums ${accent ? 'text-val-accent' : 'text-white'}`}>
         {value}
@@ -501,7 +501,7 @@ function Stat({ label, value, accent }) {
 
 function CreditRow({ label, value }) {
   return (
-    <div className="flex flex-col border-b border-white/5 pb-2">
+    <div className="flex flex-col pb-2">
       <span className="text-[10px] uppercase tracking-widest text-slate-400">{label}</span>
       <span className="text-slate-200">{value}</span>
     </div>

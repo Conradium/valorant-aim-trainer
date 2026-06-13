@@ -1231,7 +1231,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         )}
 
         {/* Timer */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+        <div className="rounded-2xl bg-white/5 p-4 text-center">
           <p className="text-[10px] uppercase tracking-widest text-slate-400">
             {t.timeRemaining}
           </p>
@@ -1276,7 +1276,7 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
         </div>
 
         {/* Settings panel */}
-        <div className="mt-2 space-y-5 rounded-3xl border border-white/8 bg-white/[0.03] p-5">
+        <div className="mt-2 space-y-5 rounded-3xl bg-white/[0.03] p-5">
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-400">
             {t.settings}
           </p>
@@ -1515,7 +1515,7 @@ function Stat({ label, value, accent, good, bad, wide }) {
     ? 'text-val-red'
     : 'text-white';
   return (
-    <div className={`rounded-2xl border border-white/10 bg-white/5 p-3 ${wide ? 'col-span-2' : ''}`}>
+    <div className={`rounded-2xl bg-white/5 p-3 ${wide ? 'col-span-2' : ''}`}>
       <p className="text-[10px] uppercase tracking-widest text-slate-400">
         {label}
       </p>
@@ -1637,7 +1637,7 @@ function HitMarker({ color }) {
 
 function SummaryRow({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+    <div className="rounded-2xl bg-white/5 px-4 py-3">
       <p className="text-[10px] uppercase tracking-widest text-slate-400">
         {label}
       </p>
