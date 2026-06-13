@@ -161,6 +161,8 @@ export default function App() {
           lang={lang}
           setLang={handleSetLang}
           isMobile={isMobile}
+          name={name}
+          setName={handleSetName}
           best={best}
           setBest={handleSetBest}
           onSession={handleSession}

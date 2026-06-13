@@ -91,7 +91,7 @@ const VALORANT_YAW_CONSTANT = 0.07;
 // look (which makes panning sideways feel swimmy/heavy).
 const VALORANT_HFOV = 103;
 
-export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setBest, onSession, showToast }) {
+export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setName, best, setBest, onSession, showToast }) {
   const mountRef = useRef(null);
   const rootRef = useRef(null);
   // All mutable engine/game data — lives outside React's render cycle so the
@@ -1424,6 +1424,8 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, best, setB
                   t={t}
                   splitLabel={mode.reflex ? t.avgReaction : t.avgSplit}
                   onAgain={startPractice}
+                  name={name}
+                  setName={setName}
                 />
               ) : (
                 <>
@@ -1583,7 +1585,18 @@ function Crosshair({ color, size, moving, bloomRef }) {
   );
 }
 
-function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t, splitLabel, onAgain }) {
+function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t, splitLabel, onAgain, name, setName }) {
+  const [tempName, setTempName] = React.useState('');
+  const [saved, setSaved] = React.useState(false);
+  const showPrompt = name === 'Agent' && !saved;
+
+  const handleSave = () => {
+    const trimmed = tempName.trim();
+    if (!trimmed || trimmed === 'Agent') return;
+    setName(trimmed);
+    setSaved(true);
+  };
+
   return (
     <div className="w-[22rem] rounded-[2rem] border border-white/10 bg-[#141d24] p-7 shadow-2xl">
       <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
@@ -1606,9 +1619,44 @@ function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t
         <SummaryRow label={t.hits} value={hits} />
         <SummaryRow label={t.misses} value={misses} />
       </div>
+
+      {/* Name prompt — shown only when name is still the default "Agent" */}
+      {showPrompt && (
+        <div className="mt-4 rounded-2xl bg-[#ff4655]/10 px-4 py-3">
+          <p className="mb-0.5 text-[11px] font-black uppercase tracking-widest text-[#ff4655]">
+            {t.namePromptTitle}
+          </p>
+          <p className="mb-2.5 text-[11px] leading-snug text-slate-400">
+            {t.namePromptSub}
+          </p>
+          <div className="flex gap-2">
+            <input
+              value={tempName}
+              onChange={(e) => setTempName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              maxLength={20}
+              placeholder={t.namePromptPlaceholder}
+              className="min-w-0 flex-1 rounded-xl bg-black/30 px-3 py-2 text-sm text-white outline-none border border-white/10 focus:border-[#00e5c0] transition-colors"
+            />
+            <button
+              onClick={handleSave}
+              disabled={!tempName.trim() || tempName.trim() === 'Agent'}
+              className="rounded-xl bg-[#00e5c0] px-3 py-2 text-xs font-black text-[#0f1419] transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              {t.namePromptSave}
+            </button>
+          </div>
+        </div>
+      )}
+      {saved && (
+        <p className="mt-3 text-center text-xs font-bold text-[#00e5c0]">
+          ✓ {t.namePromptSaved}
+        </p>
+      )}
+
       <button
         onClick={onAgain}
-        className="mt-6 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
+        className="mt-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
       >
         {t.playAgain}
       </button>
