@@ -2,13 +2,22 @@
 // the app runs fine without Turnstile configured. When a site key is present it
 // lazy-loads the Turnstile script, renders one invisible widget, and returns a
 // fresh single-use token on demand (used by startSession). Fails open — any
-// error resolves to null so gameplay is never blocked by a captcha hiccup.
+// error or timeout resolves to null so gameplay is never blocked by a captcha.
 
 const SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY || '';
 const SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+const TOKEN_TIMEOUT_MS = 8000;
 
 let scriptPromise = null;
 let widgetId = null;
+let pending = null; // { resolve } for the in-flight execute()
+
+function settle(token) {
+  if (pending) {
+    pending.resolve(token);
+    pending = null;
+  }
+}
 
 function loadScript() {
   if (scriptPromise) return scriptPromise;
@@ -25,15 +34,19 @@ function loadScript() {
 }
 
 function ensureWidget() {
-  if (widgetId !== null) return widgetId;
-  // Off-screen container for the invisible/managed widget.
+  if (widgetId !== null) return;
+  // Off-screen container for the invisible widget. The token arrives via the
+  // callbacks below (Turnstile's API is callback-based, not promise-based).
   const holder = document.createElement('div');
-  holder.style.position = 'fixed';
-  holder.style.bottom = '0';
-  holder.style.left = '-9999px';
+  holder.style.cssText = 'position:fixed;left:-9999px;bottom:0;width:0;height:0;';
   document.body.appendChild(holder);
-  widgetId = window.turnstile.render(holder, { sitekey: SITEKEY, size: 'invisible' });
-  return widgetId;
+  widgetId = window.turnstile.render(holder, {
+    sitekey: SITEKEY,
+    size: 'invisible',
+    callback: (token) => settle(token),
+    'error-callback': () => settle(null),
+    'timeout-callback': () => settle(null),
+  });
 }
 
 /**
@@ -45,9 +58,14 @@ export async function getTurnstileToken() {
   try {
     await loadScript();
     if (!window.turnstile) return null;
-    const id = ensureWidget();
-    window.turnstile.reset(id);
-    return await window.turnstile.execute(id, { action: 'session' });
+    ensureWidget();
+    return await new Promise((resolve) => {
+      pending = { resolve };
+      try { window.turnstile.reset(widgetId); } catch { /* fresh widget */ }
+      window.turnstile.execute(widgetId, { action: 'session' });
+      // Safety net: never let a stuck challenge block starting a round.
+      setTimeout(() => settle(null), TOKEN_TIMEOUT_MS);
+    });
   } catch (err) {
     console.warn('[Turnstile] token error:', err.message);
     return null;
