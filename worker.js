@@ -500,6 +500,7 @@ export default {
 
         const stats = validateGameStats({ score, accuracy, split });
         if (!stats.ok) {
+          console.error("score reject (stats):", stats.error, { score, accuracy, split });
           return new Response(
             JSON.stringify({ success: false, error: stats.error }),
             { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -518,6 +519,7 @@ export default {
         }
 
         if (!(await withinRateLimit(env, request, deviceId))) {
+          console.error("score reject (rate limit)", deviceId);
           return new Response(
             JSON.stringify({ success: false, error: "Too many requests. Please slow down." }),
             { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -533,6 +535,7 @@ export default {
         }
         const session = await verifySession(env.SESSION_SECRET, token);
         if (!session.ok || session.deviceId !== deviceId) {
+          console.error("score reject (session):", session.ok ? "device mismatch" : session.error, "hasToken:", !!token);
           return new Response(
             JSON.stringify({ success: false, error: session.ok ? "Session token does not match device" : session.error }),
             { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -544,6 +547,7 @@ export default {
             "INSERT INTO used_sessions (nonce, used_at) VALUES (?, ?)"
           ).bind(session.nonce, new Date().toISOString()).run();
         } catch {
+          console.error("score reject (nonce reused)");
           return new Response(
             JSON.stringify({ success: false, error: "Session token already used" }),
             { status: 409, headers: { "Content-Type": "application/json", ...corsHeaders } }
