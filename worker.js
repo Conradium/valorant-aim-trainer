@@ -698,11 +698,11 @@ export default {
       }
     }
 
-    // GET /api/donations — most recent donations for the landing supporters card.
+    // GET /api/donations — top donations (largest first) for the supporters card.
     if (path === "/api/donations" && request.method === "GET") {
       try {
         const { results } = await env.DB.prepare(
-          "SELECT name, amount, created_at FROM donations ORDER BY created_at DESC LIMIT 20"
+          "SELECT name, amount, created_at FROM donations ORDER BY amount DESC, created_at DESC LIMIT 20"
         ).all();
         const data = (results || []).map((r) => ({
           name: r.name,
