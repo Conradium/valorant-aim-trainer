@@ -338,21 +338,21 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
       {/* Wind effect */}
       <WindFX />
       {/* ---------- Top bar ---------- */}
-      <header className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
-        <div className="flex items-center gap-3">
+      <header className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between gap-3 px-5 py-4 md:px-8 md:py-5">
+        <div className="flex min-w-0 items-center gap-2.5 md:gap-3">
           <img
             src="/img/app-icon.png"
             alt="AIMKU"
-            className="h-9 w-9 md:h-11 md:w-11 rounded-2xl shadow-[0_0_18px_rgba(0,229,192,0.35)]"
+            className="h-9 w-9 shrink-0 md:h-11 md:w-11 rounded-2xl shadow-[0_0_18px_rgba(0,229,192,0.35)]"
           />
-          <div className="leading-tight">
-            <p className="text-base md:text-lg font-black tracking-[0.3em] text-white">AIMKU</p>
-            <p className="text-[9px] md:text-[10px] tracking-[0.35em] text-slate-400">
+          <div className="min-w-0 leading-tight">
+            <p className="text-base md:text-lg font-black tracking-[0.25em] md:tracking-[0.3em] text-white">AIMKU</p>
+            <p className="truncate text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.35em] text-slate-400">
               {t.subtitle.toUpperCase()} · MICRO FLICKS
             </p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-right">
           {profileLoading ? (
             <div className="mb-1 ml-auto h-3 w-20 animate-pulse rounded bg-white/10" />
           ) : (
@@ -378,7 +378,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
             <button
               onClick={dismissNotice}
               aria-label="Close"
-              className="-mt-0.5 shrink-0 text-slate-300 transition-colors hover:text-white"
+              className="-m-1.5 shrink-0 p-1.5 text-slate-300 transition-colors hover:text-white"
             >
               ✕
             </button>
@@ -425,20 +425,22 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
         </aside>
       )}
 
-      {/* ---------- Footer ---------- */}
-      <footer className="absolute bottom-4 left-6 right-6 md:left-8 md:right-auto z-10 text-[9px] md:text-[10px] tracking-widest text-slate-500 leading-normal">
-        {t.footerText}
-      </footer>
-
-      {/* ---------- Background credit (every wallpaper, incl. the Jett one, is Zhranx15's work) ---------- */}
-      <a
-        href="https://alphacoders.com/users/profile/235636/Zhranx15"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute bottom-4 right-4 z-10 text-[8px] md:text-[9px] tracking-widest text-slate-500/70 transition-colors hover:text-slate-300"
-      >
-        Background by Zhranx15
-      </a>
+      {/* ---------- Footer + background credit ----------
+           Stacks vertically on mobile (no overlap), splits left/right on desktop.
+           Every wallpaper, incl. the Jett one, is Zhranx15's work. */}
+      <div className="absolute bottom-3 left-5 right-5 z-10 flex flex-col gap-1 md:bottom-4 md:left-8 md:flex-row md:items-end md:justify-between md:gap-4">
+        <p className="text-[9px] md:text-[10px] tracking-widest text-slate-500 leading-normal md:max-w-[70%]">
+          {t.footerText}
+        </p>
+        <a
+          href="https://alphacoders.com/users/profile/235636/Zhranx15"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 text-[8px] md:text-[9px] tracking-widest text-slate-500/70 transition-colors hover:text-slate-300"
+        >
+          Background by Zhranx15
+        </a>
+      </div>
 
       {/* ---------- Panels ---------- */}
       {panel === 'profile' && (
