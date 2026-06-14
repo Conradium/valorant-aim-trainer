@@ -3,6 +3,13 @@ import { TEXT } from './translations.js';
 import { fetchLeaderboard, fetchRank, fetchDonations, fetchBackgrounds } from './api.js';
 import { generateShareCard, CARD_TEMPLATES } from './shareCard.js';
 
+// Leaderboard mode filter: [mode key, translation key]. 'all' = overall board.
+const LB_MODE_TABS = [
+  ['all', 'lbAllModes'], ['micro', 'lbModeMicro'], ['wide', 'lbModeWide'],
+  ['reflex', 'lbModeReflex'], ['grid', 'lbModeGrid'], ['head', 'lbModeHead'],
+  ['strafe', 'lbModeStrafe'],
+];
+
 // Landing background (converted from PNG → WebP for a much smaller file).
 const BG_URL = '/img/jett-background.webp';
 
@@ -50,6 +57,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
   const [boardError, setBoardError] = useState(false);
   const [lbRange, setLbRange] = useState('week'); // 'week' | 'all'
   const [lbMode, setLbMode] = useState('all'); // 'all' | mode key (micro, wide, …)
+  const [lbModeOpen, setLbModeOpen] = useState(false); // mode dropdown open?
   const [myRankInfo, setMyRankInfo] = useState(null); // { rank, score } when outside top 10
   const [donations, setDonations] = useState([]); // recent Saweria supporters
   // Start from the last wallpaper we showed (cached) so reloads paint it
@@ -614,7 +622,9 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
 
       {panel === 'leaderboard' && (
         <Modal title={t.leaderboard} onClose={() => setPanel(null)} scroll={false}>
-          <div className="-mt-2 mb-4 flex shrink-0 items-center justify-between gap-2">
+          {/* Controls: time range (pills) on the left; a compact mode dropdown
+              + refresh icon on the right — keeps the header uncluttered. */}
+          <div className="-mt-2 mb-3 flex shrink-0 items-center justify-between gap-2">
             <div className="flex rounded-full bg-white/5 p-0.5">
               {[['week', t.lbWeekly], ['all', t.lbAllTime]].map(([r, label]) => (
                 <button
@@ -628,32 +638,41 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
                 </button>
               ))}
             </div>
-            <button
-              onClick={loadLeaderboard}
-              disabled={board === null}
-              className="text-[10px] uppercase tracking-widest text-val-accent hover:opacity-80 disabled:opacity-30 transition-opacity"
-            >
-              ↻ {t.leaderboardRetry}
-            </button>
-          </div>
-          {/* Per-mode tabs. "All" is the overall board (every size, incl. legacy
-              scores); each mode is the fair board (standard target size only). */}
-          <div className="no-scrollbar -mt-2 mb-3 flex shrink-0 gap-1.5 overflow-x-auto">
-            {[
-              ['all', t.lbAllModes], ['micro', t.lbModeMicro], ['wide', t.lbModeWide],
-              ['reflex', t.lbModeReflex], ['grid', t.lbModeGrid], ['head', t.lbModeHead],
-              ['strafe', t.lbModeStrafe],
-            ].map(([m, label]) => (
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <button
+                  onClick={() => setLbModeOpen((o) => !o)}
+                  className="flex items-center gap-1 rounded-full bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-300 transition-colors hover:text-white"
+                >
+                  {t[LB_MODE_TABS.find(([m]) => m === lbMode)?.[1] || 'lbAllModes']}
+                  <span className="text-[8px] text-slate-500">{lbModeOpen ? '▲' : '▼'}</span>
+                </button>
+                {lbModeOpen && (
+                  <div className="absolute right-0 z-40 mt-2 w-36 overflow-hidden rounded-2xl border border-white/10 bg-[#0f1922] shadow-xl">
+                    {LB_MODE_TABS.map(([m, key]) => (
+                      <button
+                        key={m}
+                        onClick={() => { setLbMode(m); setLbModeOpen(false); }}
+                        className={`block w-full border-l-2 px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wider transition hover:bg-white/10 ${
+                          lbMode === m ? 'border-val-accent bg-white/5 text-val-accent' : 'border-transparent text-slate-300'
+                        }`}
+                      >
+                        {t[key]}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
-                key={m}
-                onClick={() => setLbMode(m)}
-                className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                  lbMode === m ? 'bg-val-accent/20 text-val-accent' : 'text-slate-400 hover:text-white'
-                }`}
+                onClick={loadLeaderboard}
+                disabled={board === null}
+                aria-label={t.leaderboardRetry}
+                title={t.leaderboardRetry}
+                className="text-base text-val-accent hover:opacity-80 disabled:opacity-30 transition-opacity"
               >
-                {label}
+                ↻
               </button>
-            ))}
+            </div>
           </div>
           {lbMode !== 'all' && (
             <p className="-mt-1 mb-3 shrink-0 text-[11px] leading-snug text-slate-500">{t.lbModeHint}</p>
