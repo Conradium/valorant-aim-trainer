@@ -164,7 +164,8 @@ function verifyGameLog(log, claimedScore) {
   const shots = hits.length + misses;
   const accuracy = shots > 0 ? (hits.length / shots) * 100 : 0;
   const split = bonusCount > 0 ? bonusSum / bonusCount : 0;
-  return { ok: true, score, accuracy, split };
+  // Hard cap: even a plausible-looking log can never store above MAX_SCORE.
+  return { ok: true, score: Math.min(score, MAX_SCORE), accuracy, split };
 }
 
 /**
