@@ -502,7 +502,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
               ↻ {t.leaderboardRetry}
             </button>
           </div>
-          <div className="h-[55vh] overflow-y-auto no-scrollbar">
+          <div className="h-[50vh] overflow-y-auto overscroll-contain no-scrollbar md:h-[55vh]">
           {board === null ? (
             <div className="flex h-full items-center justify-center">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-[#00e5c0]" />
@@ -716,7 +716,7 @@ function Modal({ title, children, onClose }) {
         aria-modal="true"
         aria-labelledby="modal-title"
         tabIndex={-1}
-        className="no-scrollbar w-full max-w-md max-h-[80dvh] overflow-y-auto rounded-[2rem] border border-white/10 bg-[#141d24] p-7 shadow-2xl focus:outline-none"
+        className="no-scrollbar w-full max-w-md max-h-[80dvh] overflow-y-auto overscroll-contain rounded-[2rem] border border-white/10 bg-[#141d24] p-7 shadow-2xl focus:outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
