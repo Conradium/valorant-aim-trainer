@@ -10,6 +10,12 @@ binding = "DB"
 database_name = "valorant-aim-trainer-db"
 database_id = "74acbd75-c434-456d-b00b-ada342384887"
 
+# R2 bucket holding the rotating landing-page background images. Add images with:
+#   npx wrangler r2 object put aimku-backgrounds/<name>.webp --file=<path> --remote
+[[r2_buckets]]
+binding = "BG_BUCKET"
+bucket_name = "aimku-backgrounds"
+
 # Native Cloudflare rate limiting for the write endpoints (/api/score, /api/profile).
 # A real 60 s session produces ~1 submission/min, so these ceilings never affect
 # legitimate play but block scripted spam/flooding. period must be 10 or 60.

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { TEXT } from './translations.js';
-import { fetchLeaderboard, fetchRank, fetchDonations } from './api.js';
+import { fetchLeaderboard, fetchRank, fetchDonations, fetchBackgrounds } from './api.js';
 import { generateShareCard, CARD_TEMPLATES } from './shareCard.js';
 
 // Landing background (converted from PNG → WebP for a much smaller file).
@@ -34,6 +34,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
   const [lbRange, setLbRange] = useState('week'); // 'week' | 'all'
   const [myRankInfo, setMyRankInfo] = useState(null); // { rank, score } when outside top 10
   const [donations, setDonations] = useState([]); // recent Saweria supporters
+  const [bgUrl, setBgUrl] = useState(BG_URL); // rotating background (falls back to bundled)
   // Landing announcement banner: shows on every visit until NOTICE_EXPIRY, then
   // auto-hides for everyone. The ✕ only closes it for the current session.
   const [showNotice, setShowNotice] = useState(() => Date.now() < NOTICE_EXPIRY);
@@ -241,6 +242,22 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
 
   // Recent supporters for the right-side card (empty array hides the card).
   useEffect(() => { fetchDonations().then(setDonations); }, []);
+
+  // Rotating landing background from R2: pick one deterministically per 2-week
+  // window so it changes automatically. Falls back to the bundled image.
+  useEffect(() => {
+    let alive = true;
+    fetchBackgrounds().then((imgs) => {
+      if (!alive || !imgs.length) return;
+      const fortnight = Math.floor(Date.now() / 86400000 / 14);
+      const chosen = imgs[fortnight % imgs.length];
+      // Preload before swapping so there's no flash of a half-loaded image.
+      const pre = new Image();
+      pre.onload = () => { if (alive) setBgUrl(chosen); };
+      pre.src = chosen;
+    });
+    return () => { alive = false; };
+  }, []);
   const formatRp = (n) => `Rp${Number(n || 0).toLocaleString('id-ID')}`;
 
   return (
@@ -254,8 +271,9 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
         style={{
           // Oversized by 12% on each side so the translate never reveals a gap.
           inset: '-8%',
-          backgroundImage: `url('${BG_URL}')`,
+          backgroundImage: `url('${bgUrl}')`,
           backgroundSize: 'cover',
+          transition: 'background-image 0.4s ease',
           backgroundPosition: 'center right',
           willChange: 'transform',
         }}

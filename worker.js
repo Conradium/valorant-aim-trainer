@@ -750,6 +750,51 @@ export default {
       }
     }
 
+    // GET /api/backgrounds — list landing-page background images stored in R2.
+    // The client rotates through these by date. Returns relative paths the
+    // client resolves against the API origin.
+    if (path === "/api/backgrounds" && request.method === "GET") {
+      try {
+        if (!env.BG_BUCKET) {
+          return new Response(JSON.stringify({ success: true, images: [] }),
+            { headers: { "Content-Type": "application/json", ...corsHeaders } });
+        }
+        const list = await env.BG_BUCKET.list({ limit: 100 });
+        const images = (list.objects || [])
+          .map((o) => o.key)
+          .sort()
+          .map((k) => `/api/bg/${encodeURIComponent(k)}`);
+        return new Response(
+          JSON.stringify({ success: true, images }),
+          { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=600", ...corsHeaders } }
+        );
+      } catch (err) {
+        console.error("backgrounds list error:", err);
+        return new Response(JSON.stringify({ success: false, images: [] }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      }
+    }
+
+    // GET /api/bg/<key> — stream one background image from R2 (cached at edge).
+    if (path.startsWith("/api/bg/") && request.method === "GET") {
+      if (!env.BG_BUCKET) return new Response("Not Found", { status: 404, headers: corsHeaders });
+      const key = decodeURIComponent(path.slice("/api/bg/".length));
+      try {
+        const obj = await env.BG_BUCKET.get(key);
+        if (!obj) return new Response("Not Found", { status: 404, headers: corsHeaders });
+        return new Response(obj.body, {
+          headers: {
+            "Content-Type": obj.httpMetadata?.contentType || "image/webp",
+            "Cache-Control": "public, max-age=86400",
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
+      } catch (err) {
+        console.error("bg fetch error:", err);
+        return new Response("Error", { status: 500, headers: corsHeaders });
+      }
+    }
+
     return new Response("Not Found", { status: 404, headers: corsHeaders });
   }
 };

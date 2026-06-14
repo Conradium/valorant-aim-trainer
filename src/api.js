@@ -163,6 +163,23 @@ export async function fetchRank(deviceId) {
 }
 
 /**
+ * Fetches the list of rotating landing background image URLs (from R2 via the
+ * Worker). Returns absolute URLs (possibly empty); never throws.
+ */
+export async function fetchBackgrounds() {
+  try {
+    const res = await fetchWithTimeout(`${API_URL}/api/backgrounds`);
+    if (res.ok) {
+      const json = await res.json();
+      return (json.images || []).map((p) => `${API_URL}${p}`);
+    }
+  } catch (err) {
+    console.warn('[API] Could not fetch backgrounds:', err.message);
+  }
+  return [];
+}
+
+/**
  * Fetches recent Saweria donations for the landing "supporters" card.
  * Returns an array (possibly empty); never throws.
  */
