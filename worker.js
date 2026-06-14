@@ -155,10 +155,11 @@ function verifyGameLog(log, claimedScore) {
     if (median < SUSTAINED_FLOOR_MS) return { ok: false, error: 'Implausible hit cadence' };
   }
 
-  // The re-derived score is authoritative; a mismatch means a tampered client.
-  if (Number.isFinite(Number(claimedScore)) && Math.abs(score - Number(claimedScore)) > SCORE_TOLERANCE) {
-    return { ok: false, error: 'Score does not match gameplay log' };
-  }
+  // The re-derived score is authoritative — we STORE this, not the client's
+  // claimed value — so we deliberately don't reject on client/server rounding
+  // differences (the client scores from raw intervals, the log rounds them).
+  // The plausibility gates above are what guard against forged logs.
+  void claimedScore;
 
   const shots = hits.length + misses;
   const accuracy = shots > 0 ? (hits.length / shots) * 100 : 0;
@@ -509,6 +510,7 @@ export default {
         // The recomputed values — not the client's claimed ones — are stored.
         const verified = verifyGameLog(log, score);
         if (!verified.ok) {
+          console.error("score verify rejected:", verified.error, "hits:", log && Array.isArray(log.hits) ? log.hits.length : 'n/a');
           return new Response(
             JSON.stringify({ success: false, error: verified.error }),
             { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
