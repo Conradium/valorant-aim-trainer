@@ -1691,6 +1691,14 @@ function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t
   const [saved, setSaved] = React.useState(false);
   const showPrompt = name === 'Agent' && !saved;
 
+  // Brief grace period so a click left over from the final shots of the round
+  // can't immediately trigger "Play Again" and skip straight into a new match.
+  const [ready, setReady] = React.useState(false);
+  React.useEffect(() => {
+    const id = setTimeout(() => setReady(true), 700);
+    return () => clearTimeout(id);
+  }, []);
+
   const handleSave = () => {
     const trimmed = tempName.trim();
     if (!trimmed || trimmed === 'Agent') return;
@@ -1757,7 +1765,8 @@ function SessionSummary({ score, accuracy, hits, misses, avgRt, best, newHigh, t
 
       <button
         onClick={onAgain}
-        className="mt-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95"
+        disabled={!ready}
+        className="mt-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-all hover:bg-white/15 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-white/10"
       >
         {t.playAgain}
       </button>
