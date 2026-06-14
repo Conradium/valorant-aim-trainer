@@ -708,6 +708,10 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
             </>
           )}
           </div>
+          {/* Warm thank-you to the players, pinned below the scroll area */}
+          <p className="mt-4 border-t border-white/10 pt-4 text-center text-[11px] leading-relaxed text-slate-400">
+            {t.lbThanks}
+          </p>
         </Modal>
       )}
 
