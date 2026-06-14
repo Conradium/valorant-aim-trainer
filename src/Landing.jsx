@@ -371,7 +371,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
 
       {/* ---------- Announcement banner ---------- */}
       {showNotice && (
-        <div className="absolute left-1/2 top-16 z-30 w-[92%] max-w-md -translate-x-1/2 md:top-20">
+        <div className="absolute left-1/2 top-24 z-30 w-[92%] max-w-md -translate-x-1/2 md:top-24">
           <div className="flex items-start gap-3 rounded-2xl border border-white/15 bg-black/50 px-4 py-3 shadow-lg backdrop-blur-sm">
             <span className="text-base leading-none">🙏</span>
             <p className="flex-1 text-[11px] leading-relaxed text-slate-100 md:text-xs">{t.noticeText}</p>
