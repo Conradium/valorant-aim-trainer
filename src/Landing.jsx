@@ -6,10 +6,10 @@ import { generateShareCard, CARD_TEMPLATES } from './shareCard.js';
 // Landing background (converted from PNG → WebP for a much smaller file).
 const BG_URL = '/img/jett-background.webp';
 
-// Apology banner auto-expires one week after the cleanup (2026-06-14). It shows
+// Apology banner auto-expires one month after the cleanup (2026-06-14). It shows
 // on every visit until this moment, then never appears again. Bump this date to
-// run a future announcement for another week.
-const NOTICE_EXPIRY = new Date('2026-06-21T23:59:59+07:00').getTime();
+// run a future announcement.
+const NOTICE_EXPIRY = new Date('2026-07-14T23:59:59+07:00').getTime();
 
 // People credited in the Credits modal's "Special Thanks" section. Add an entry
 // per contributor; `url` and `note` are optional.
