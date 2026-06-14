@@ -25,11 +25,11 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
   // Landing announcement banner. Bump the localStorage key (v1 -> v2 ...) to
   // re-show it after changing the message.
   const [showNotice, setShowNotice] = useState(() => {
-    try { return localStorage.getItem('vat_notice_v1') !== '1'; } catch { return true; }
+    try { return localStorage.getItem('vat_notice_v2') !== '1'; } catch { return true; }
   });
   const dismissNotice = () => {
     setShowNotice(false);
-    try { localStorage.setItem('vat_notice_v1', '1'); } catch { /* ignore */ }
+    try { localStorage.setItem('vat_notice_v2', '1'); } catch { /* ignore */ }
   };
   // Share-card state: the generated PNG (as an object URL for preview) + its Blob
   // (for the Web Share API), and a flag while the canvas is rendering.
@@ -303,8 +303,8 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
       {/* ---------- Announcement banner ---------- */}
       {showNotice && (
         <div className="absolute left-1/2 top-16 z-30 w-[92%] max-w-md -translate-x-1/2 md:top-20">
-          <div className="flex items-start gap-3 rounded-2xl border border-val-red/40 bg-val-red/15 px-4 py-3 shadow-lg backdrop-blur-sm">
-            <span className="text-base leading-none">⚠️</span>
+          <div className="flex items-start gap-3 rounded-2xl border border-white/15 bg-black/50 px-4 py-3 shadow-lg backdrop-blur-sm">
+            <span className="text-base leading-none">🙏</span>
             <p className="flex-1 text-[11px] leading-relaxed text-slate-100 md:text-xs">{t.noticeText}</p>
             <button
               onClick={dismissNotice}
