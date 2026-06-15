@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#0f1419" />
+    <link rel="canonical" href="https://aimku.xyz/" />
 
     <!-- SEO: description & keywords -->
     <meta name="description" content="AIMKU - Free Valorant-style aim trainer. Train micro flicks, wide flicks, reflex, and gridshot directly in your browser. No download required." />
@@ -37,6 +38,39 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <title>AIMKU - Aim Trainer</title>
+
+    <!-- Structured data for rich results -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://aimku.xyz/#website",
+          "url": "https://aimku.xyz/",
+          "name": "AIMKU",
+          "description": "Free Valorant-style browser aim trainer. Train micro flicks, wide flicks, reflex, and gridshot - no download required.",
+          "inLanguage": "en"
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://aimku.xyz/#webapp",
+          "name": "AIMKU - Aim Trainer",
+          "url": "https://aimku.xyz/",
+          "applicationCategory": "GameApplication",
+          "operatingSystem": "Any (web browser)",
+          "browserRequirements": "Requires JavaScript and WebGL.",
+          "description": "Free browser-based aim trainer inspired by Valorant. Train micro flicks, wide flicks, reflex pop, and gridshot directly in your browser.",
+          "isPartOf": { "@id": "https://aimku.xyz/#website" },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
