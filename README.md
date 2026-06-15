@@ -3,6 +3,12 @@
 A 3D aim trainer inspired by Valorant, built with **React + Three.js + Tailwind**.
 Live at **[aimku.xyz](https://aimku.xyz)**. Fan project — not affiliated with Riot Games.
 
+## Demo
+
+[![AIMKU demo](https://img.youtube.com/vi/5Nd4XRpEkvw/maxresdefault.jpg)](https://youtu.be/5Nd4XRpEkvw)
+
+▶️ **[Watch the 10-second demo on YouTube](https://youtu.be/5Nd4XRpEkvw)** — start a session, pick a mode, play, and exit.
+
 ## Features
 
 - **True 3D FPS camera** via the Pointer Lock API.
