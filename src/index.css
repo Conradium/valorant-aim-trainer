@@ -76,6 +76,19 @@ input[type='range']::-moz-range-thumb:hover {
 .animate-hitmarker { animation: hitmarker 0.25s ease-out forwards; }
 .animate-floatup   { animation: floatup  0.65s ease-out forwards; }
 
+/* --- Waving hand (Say Hello menu) --- */
+@keyframes wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  10%, 30%      { transform: rotate(14deg); }
+  20%, 40%      { transform: rotate(-8deg); }
+  50%           { transform: rotate(14deg); }
+}
+.animate-wave {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: wave 2s ease-in-out infinite;
+}
+
 @keyframes toast-in {
   0%   { transform: translateX(110%); opacity: 0; }
   100% { transform: translateX(0);    opacity: 1; }

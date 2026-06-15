@@ -433,12 +433,11 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
 
         <MenuItem label={t.leaderboard} onClick={() => setPanel('leaderboard')} />
         <MenuItem label={t.profile} onClick={() => setPanel('profile')} />
-        <MenuItem label={`⚙ ${t.settings}`} onClick={() => setPanel('settings')} />
+        <MenuItem label={t.settings} onClick={() => setPanel('settings')} />
         <MenuItem label={t.credits} onClick={() => setPanel('credits')} />
-        <MenuItem label={`👋 ${t.support}`} onClick={() => setPanel('support')} />
         <MenuItem
-          label={lang === 'en' ? '🌐 Language: EN' : '🌐 Bahasa: ID'}
-          onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
+          label={<><span className="animate-wave">👋</span> {t.support}</>}
+          onClick={() => setPanel('support')}
         />
       </nav>
 
@@ -799,7 +798,7 @@ export default function Landing({ onPlay, lang, setLang, isMobile, name, setName
       )}
 
       {panel === 'settings' && (
-        <SettingsPanel t={t} onClose={() => setPanel(null)} />
+        <SettingsPanel t={t} lang={lang} setLang={setLang} onClose={() => setPanel(null)} />
       )}
 
       {panel === 'support' && (
@@ -992,7 +991,7 @@ function CreditRow({ label, value }) {
  * each change immediately via saveSettings/saveMuted. Gameplay-affecting values
  * are read by the arena when a round starts, so changes apply next practice.
  * ------------------------------------------------------------------------- */
-function SettingsPanel({ t, onClose }) {
+function SettingsPanel({ t, lang, setLang, onClose }) {
   const init = loadSettings();
   const [sfxVolume, setSfxVolume] = useState(init.sfxVolume);
   const [muted, setMuted] = useState(loadMuted());
@@ -1008,6 +1007,28 @@ function SettingsPanel({ t, onClose }) {
   return (
     <Modal title={t.settings} onClose={onClose}>
       <div className="flex flex-col gap-6">
+        <SettingsSection label={t.language}>
+          <div className="flex gap-2">
+            {[['en', 'English'], ['id', 'Bahasa Indonesia']].map(([code, name]) => {
+              const active = lang === code;
+              return (
+                <button
+                  key={code}
+                  onClick={() => setLang(code)}
+                  aria-pressed={active}
+                  className={`flex-1 rounded-xl border px-3 py-2 text-sm font-bold transition-colors ${
+                    active
+                      ? 'border-[#00e5c0] bg-[#00e5c0]/15 text-val-accent'
+                      : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        </SettingsSection>
+
         <SettingsSection label={t.settingsAudio}>
           <SliderRow
             label={t.sfxVolume}
