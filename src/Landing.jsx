@@ -1148,22 +1148,32 @@ function ToggleRow({ label, hint, checked, onChange }) {
         <span className="text-sm text-slate-200">{label}</span>
         {hint && <p className="text-[10px] leading-snug text-slate-500">{hint}</p>}
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-          checked ? 'bg-[#00e5c0]' : 'bg-white/15'
-        }`}
-      >
+      <div className="flex shrink-0 items-center gap-2.5">
+        {/* Explicit On/Off word so the state is unambiguous at a glance. */}
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-            checked ? 'translate-x-[22px]' : 'translate-x-0.5'
+          className={`w-6 text-right text-[10px] font-black uppercase tracking-wider ${
+            checked ? 'text-val-accent' : 'text-slate-500'
           }`}
-        />
-      </button>
+        >
+          {checked ? 'On' : 'Off'}
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          aria-label={label}
+          onClick={() => onChange(!checked)}
+          className={`relative h-7 w-12 rounded-full border transition-colors ${
+            checked ? 'border-[#00e5c0] bg-[#00e5c0]/25' : 'border-white/15 bg-white/5'
+          }`}
+        >
+          <span
+            className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full shadow-md transition-all ${
+              checked ? 'left-[26px] bg-[#00e5c0]' : 'left-0.5 bg-slate-300'
+            }`}
+          />
+        </button>
+      </div>
     </div>
   );
 }
