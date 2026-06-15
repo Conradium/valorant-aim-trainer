@@ -44,7 +44,7 @@ const CONTRIBUTORS = [
 
 // Contact / support destinations — edit to your own links.
 const CONTACT = {
-  email: 'muhammadlikmansyah143@gmail.com',
+  email: 'ediloupatty@gmail.com',
   donate: 'https://saweria.co/ediloupatty',
   github: 'https://github.com/ediiloupatty', // ← your profile
 };
