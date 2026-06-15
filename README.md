@@ -82,3 +82,4 @@ React 18 · Three.js · Tailwind CSS · Vite · Cloudflare Workers + D1
 
 For aim that matches Valorant 1:1, disable OS mouse acceleration
 ("Enhance pointer precision" on Windows).
+
