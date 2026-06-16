@@ -35,6 +35,11 @@ function isValidDeviceId(id) {
 // staying generous enough never to reject a legitimate elite run.
 const MAX_NAME_LEN = 20;
 const MAX_SCORE = 100000;   // generous ceiling; a real 40 s session caps well below this
+// Scores are cumulative over the round, so a 40 s round totals less than the
+// legacy 60 s round. Normalise every stored score to a 60 s equivalent (×1.5)
+// so the leaderboard stays fair across both eras. Mirrors SCORE_NORMALIZER on
+// the client, which scales the live score and synced best the same way.
+const SCORE_NORMALIZER = 60 / 40; // 1.5
 const MAX_ACCURACY = 100;   // accuracy is a percentage
 const MAX_SPLIT_MS = 60000; // generous ceiling; a split can't exceed the session length
 
@@ -173,8 +178,10 @@ function verifyGameLog(log, claimedScore) {
   const shots = hits.length + misses;
   const accuracy = shots > 0 ? (hits.length / shots) * 100 : 0;
   const split = bonusCount > 0 ? bonusSum / bonusCount : 0;
-  // Hard cap: even a plausible-looking log can never store above MAX_SCORE.
-  return { ok: true, score: Math.min(score, MAX_SCORE), accuracy, split };
+  // Normalise to the 60 s equivalent (matches the client), then hard-cap so even
+  // a plausible-looking log can never store above MAX_SCORE.
+  const normalized = Math.round(score * SCORE_NORMALIZER);
+  return { ok: true, score: Math.min(normalized, MAX_SCORE), accuracy, split };
 }
 
 /**

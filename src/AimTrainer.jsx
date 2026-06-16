@@ -16,6 +16,13 @@ const TARGET_DISTANCE = -8;
 const FLOOR_Y = -1.6;
 const SESSION_SECONDS = 40;
 
+// Scores are cumulative over the round, so a 40 s round naturally totals less
+// than the legacy 60 s round. To keep the leaderboard fair across both eras,
+// every score is normalised to a 60 s equivalent (×1.5). The server applies the
+// same factor when it re-derives the authoritative leaderboard score.
+const SCORE_REFERENCE_SECONDS = 60;
+const SCORE_NORMALIZER = SCORE_REFERENCE_SECONDS / SESSION_SECONDS; // 1.5
+
 /*
  * Training modes. Each one reshapes how & where targets spawn:
  *  count   – simultaneous targets   spreadX/Y – cluster size (world units)
@@ -1261,6 +1268,9 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
         t: Math.round(now - eventLogRef.current.startedAt),
         b: bonusInterval == null ? null : Math.round(bonusInterval),
       });
+      // Normalise to the 60 s-equivalent so live score, popups, and the synced
+      // best all match the leaderboard (which the server scales the same way).
+      pts = Math.round(pts * SCORE_NORMALIZER);
       setHits((h) => h + 1);
       setScore((v) => v + pts);
       addPopup(`+${pts}`, '#00e5c0');
@@ -1278,6 +1288,8 @@ export default function AimTrainer({ onExit, lang, setLang, isMobile, name, setN
     };
     engine.current.onFps           = (v) => setFps(v);
     engine.current.onMoveState     = (m) => setIsMoving(m);
+    // Tracking mode isn't on the global leaderboard, so it keeps its own raw
+    // (un-normalised) scoring — no 60 s scaling needed.
     engine.current.onTrackingScore = (pts) => setScore((v) => v + pts);
     engine.current.onTrackingKill  = () => {
       hitSound();
