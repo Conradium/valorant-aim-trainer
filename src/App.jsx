@@ -10,6 +10,16 @@ const AimTrainer = lazy(() => import('./AimTrainer.jsx'));
 
 let toastSeq = 0;
 
+function checkIsMobile() {
+  if (typeof window === 'undefined') return false;
+  const ua = /Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile|BlackBerry/i.test(
+    navigator.userAgent || ''
+  );
+  const coarse = window.matchMedia?.('(pointer: coarse)')?.matches;
+  const noLock = !document.documentElement.requestPointerLock;
+  return ua || coarse || noLock || window.innerWidth < 1024;
+}
+
 // Cache the profile (name + best) in localStorage so every tab in the same
 // browser shows the same identity instantly — before the async server fetch
 // resolves — instead of flashing the default "Agent" / 0, which looked like a
@@ -69,15 +79,7 @@ export default function App() {
   });
   const t = TEXT[lang] || TEXT.en;
 
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const ua = /Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile|BlackBerry/i.test(
-      navigator.userAgent || ''
-    );
-    const coarse = window.matchMedia?.('(pointer: coarse)')?.matches;
-    const noLock = !document.documentElement.requestPointerLock;
-    return ua || coarse || noLock || window.innerWidth < 1024;
-  });
+  const [isMobile, setIsMobile] = useState(checkIsMobile);
 
   // Unique Device ID for Cloudflare R2 Sync
   const [deviceId] = useState(() => getDeviceId());
@@ -121,14 +123,7 @@ export default function App() {
   }, [deviceId]);
 
   useEffect(() => {
-    const check = () => {
-      const ua = /Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile|BlackBerry/i.test(
-        navigator.userAgent || ''
-      );
-      const coarse = window.matchMedia?.('(pointer: coarse)')?.matches;
-      const noLock = !document.documentElement.requestPointerLock;
-      setIsMobile(ua || coarse || noLock || window.innerWidth < 1024);
-    };
+    const check = () => setIsMobile(checkIsMobile());
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);

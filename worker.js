@@ -112,6 +112,9 @@ const SUSTAINED_FLOOR_MS = 70;    // median interval below this = superhuman cad
                                   // (real human medians are ~150ms+; tune up to
                                   // tighten the cheat ceiling, down to loosen)
 const SUSTAINED_MIN_HITS = 10;    // only apply the median gate once there's enough data
+// Ceiling on log.durationMs. The real session is 40 s; 65 s gives generous
+// headroom for Turnstile startup delay without allowing time-padding attacks.
+const SESSION_MAX_MS = 65000;
 
 function ptsForInterval(b) {
   // b is the bonus interval in ms, or null for the first hit (no prior split).
@@ -134,6 +137,14 @@ function verifyGameLog(log, claimedScore) {
   if (!Number.isInteger(misses) || misses < 0) return { ok: false, error: 'Malformed gameplay log: misses' };
   if (hits.length + misses > MAX_SHOTS) return { ok: false, error: 'Gameplay log too large' };
 
+  // Validate session duration so an attacker can't pad a log with hits spread
+  // over e.g. 120 s, accumulating 3× the hits of a real 40 s session while each
+  // individual interval still passes the plausibility gates.
+  const durationMs = Number(log.durationMs);
+  if (!Number.isFinite(durationMs) || durationMs <= 0 || durationMs > SESSION_MAX_MS) {
+    return { ok: false, error: 'Invalid session duration' };
+  }
+
   let score = 0;
   let lastT = -1;
   let subFloor = 0;
@@ -145,6 +156,7 @@ function verifyGameLog(log, claimedScore) {
     if (!h || typeof h !== 'object') return { ok: false, error: 'Malformed hit entry' };
     const t = Number(h.t);
     if (!Number.isFinite(t) || t < 0) return { ok: false, error: 'Invalid hit timestamp' };
+    if (t > durationMs) return { ok: false, error: 'Hit timestamp exceeds session duration' };
     if (t < lastT) return { ok: false, error: 'Hit timestamps not in order' };
     lastT = t;
 
