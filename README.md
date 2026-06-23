@@ -8,10 +8,9 @@ Live: [aimku.xyz](https://aimku.xyz)
 
 ## Demo
 
-[![AIMKU demo](https://img.youtube.com/vi/5Nd4XRpEkvw/maxresdefault.jpg)](https://youtu.be/Cje_noEfuv8?si=tSlnTX4LsQ1PA_AL)
+[![AIMKU demo](https://img.youtube.com/vi/Cje_noEfuv8/maxresdefault.jpg)](https://youtu.be/Cje_noEfuv8?si=tSlnTX4LsQ1PA_AL)
 
-A short walkthrough: start a session, choose a mode, play a round, and exit. ([watch on YouTube](https://youtu.be/5Nd4XRpEkvw))
-
+A short walkthrough: start a session, choose a mode, play a round, and exit. (watch on YouTube)
 ## Features
 
 - True 3D FPS camera using the Pointer Lock API.
